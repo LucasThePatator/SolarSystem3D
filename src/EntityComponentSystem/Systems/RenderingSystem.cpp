@@ -10,32 +10,6 @@
 
 namespace SS3D
 {
-    // Light data
-    struct
-    {
-        int type;
-        bool enabled;
-        Vector3 position;
-        Vector3 target;
-        Color color;
-        float attenuation;
-
-        // Shader locations
-        int enabledLoc;
-        int typeLoc;
-        int positionLoc;
-        int targetLoc;
-        int colorLoc;
-        int attenuationLoc;
-    } Light;
-
-    // Light type
-    enum
-    {
-        LIGHT_DIRECTIONAL = 0,
-        LIGHT_POINT
-    } LightType;
-
     RenderingSystem::RenderingSystem(const std::filesystem::path& shadersPath) : System(),
         width(1024),
         height(768), camera(),
@@ -71,6 +45,11 @@ namespace SS3D
 
                 shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
                 shaders[fragmentShaderPath.stem().string()] = shader;
+
+                sunLight = CreateLight(LightType::POINT, {0.0f, 0.0f, 0.0f},
+                {0.0f, 0.0f, 1.0f},
+                WHITE, shader, 0
+                );
             }
         }
     }
@@ -116,5 +95,44 @@ namespace SS3D
         const Matrix SR = MatrixMultiply(S, R);
         const Matrix TSR = MatrixMultiply(T, SR);
         return TSR;
+    }
+
+    Light RenderingSystem::CreateLight(const LightType type, const Vector3& position, const Vector3& target,
+        const Color& color, const Shader& shader, const uint8_t lightIndex)
+    {
+        Light light = {
+            .type = type,
+            .enabled = true,
+            .position = position,
+            .target = target,
+            .color = color,
+        };
+
+        // NOTE: Lighting shader naming must be the provided ones
+        light.enabledLoc = GetShaderLocation(shader, TextFormat("lights[%i].enabled", lightIndex));
+        light.typeLoc = GetShaderLocation(shader, TextFormat("lights[%i].type", lightIndex));
+        light.positionLoc = GetShaderLocation(shader, TextFormat("lights[%i].position", lightIndex));
+        light.targetLoc = GetShaderLocation(shader, TextFormat("lights[%i].target", lightIndex));
+        light.colorLoc = GetShaderLocation(shader, TextFormat("lights[%i].color", lightIndex));
+
+        // Send to shader light enabled state and type
+        SetShaderValue(shader, light.enabledLoc, &light.enabled, SHADER_UNIFORM_INT);
+        SetShaderValue(shader, light.typeLoc, &light.type, SHADER_UNIFORM_INT);
+
+        // Send to shader light position values
+        const float position_data[3] = { light.position.x, light.position.y, light.position.z };
+        SetShaderValue(shader, light.positionLoc, position_data, SHADER_UNIFORM_VEC3);
+
+        // Send to shader light target position values
+        const float target_data[3] = { light.target.x, light.target.y, light.target.z };
+        SetShaderValue(shader, light.targetLoc, target_data, SHADER_UNIFORM_VEC3);
+
+        // Send to shader light color values
+        const float color_data[4] = { (float)light.color.r/(float)255, (float)light.color.g/(float)255,
+                           (float)light.color.b/(float)255, (float)light.color.a/(float)255 };
+        SetShaderValue(shader, light.colorLoc, color_data, SHADER_UNIFORM_VEC4);
+
+
+        return light;
     }
 }
