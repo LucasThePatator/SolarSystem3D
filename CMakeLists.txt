@@ -34,6 +34,11 @@ add_executable(3DSolarSystem src/main.cpp
         src/EntityComponentSystem/EntityComponentSystem.h
         src/SolarSystem.cpp
         src/SolarSystem.h
+        src/EntityComponentSystem/Components/Light.cpp
+        src/EntityComponentSystem/Components/Light.h
+        src/Renderer/Renderer.cpp
+        src/Renderer/Renderer.h
+        src/EntityComponentSystem/Systems/LightingSystem.cpp
 )
 
 target_link_libraries(3DSolarSystem PUBLIC raylib)

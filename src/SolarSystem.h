@@ -19,7 +19,7 @@ namespace SS3D
     {
     public:
         SolarSystem() = delete;
-        explicit SolarSystem(EntityComponentSystem& ecs, const std::filesystem::path& resourcePath);
+        explicit SolarSystem(EntityComponentSystem& ecs, std::filesystem::path resourcePath);
 
         Entity createBody(const std::string& name, double mass, double radius, const Vector3& position,
                           const Quaternion& attitude, std::optional<ComponentInstance> refBody = std::nullopt);

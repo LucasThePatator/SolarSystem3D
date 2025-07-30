@@ -19,7 +19,6 @@ namespace SS3D
     struct Graphics
     {
         GraphicsType type;
-
         Material material;
         Model model;
         Mesh mesh;

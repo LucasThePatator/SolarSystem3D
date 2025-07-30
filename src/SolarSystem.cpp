@@ -6,21 +6,23 @@
 
 #include "SolarSystem.h"
 #include "EntityComponentSystem/Components/Components.h"
-
+#include "Renderer/Renderer.h"
 namespace SS3D
 {
-    SolarSystem::SolarSystem(EntityComponentSystem& ecs, const std::filesystem::path& resourcePath) :
+    SolarSystem::SolarSystem(EntityComponentSystem& ecs, std::filesystem::path resourcePath) :
         ecs(ecs),
         componentsRegister(ecs.componentsRegister),
         entityManager(ecs.entityManager),
-        resourcePath(resourcePath)
+        resourcePath(std::move(resourcePath))
     {
         ecs.componentsRegister->registerComponentType<SS3D::Transform>();
         ecs.componentsRegister->registerComponentType<Motion>();
         ecs.componentsRegister->registerComponentType<Graphics>();
         ecs.componentsRegister->registerComponentType<Orbiting>();
 
-        renderingSystem = ecs.systemRegister->registerSystem<RenderingSystem>(Signature("00000101"), std::filesystem::path("/home/lucas/workspace/3DSolarSystem/src/shaders"));
+        const auto renderer = std::make_shared<Renderer::Renderer>(1024, 768);
+        renderer->initialize("/home/lucas/workspace/3DSolarSystem/src/shaders");
+        renderingSystem = ecs.systemRegister->registerSystem<RenderingSystem>(Signature("00000101"), renderer);
         renderingSystem->initialize();
 
         spdlog::info("Solar System Initialized");
