@@ -6,6 +6,7 @@
 #define INC_3DSOLARSYSTEM_COMPONENTSREGISTER_H
 #include <memory>
 #include <unordered_map>
+#include <spdlog/spdlog.h>
 
 #include "Types.h"
 #include "ComponentCollection.h"
@@ -26,6 +27,9 @@ namespace SS3D
 
             componentTypes[componentName] = componentTypeId;
             componentCollections[componentName] = std::make_shared<ComponentCollection<ComponentType>>();
+
+            spdlog::debug("Registered {}", componentName);
+
         }
 
         template <typename ComponentType>
