@@ -18,6 +18,7 @@ namespace SS3D
         constexpr size_t MAX_LIGHTS = 4;
 
         using LightHandle = int32_t;
+
         struct LightShaderInformation
         {
             int enabledLoc{-1};
@@ -33,12 +34,15 @@ namespace SS3D
         public:
             Renderer(int width, int height);
             void initialize(const std::filesystem::path& shadersPath);
-            void updateLight(LightHandle id, const Vector3 &position, const Vector3 &target, const Color &color, bool enabled = true);
+            void updateLight(LightHandle id, const Vector3& position, const Vector3& target, const Color& color,
+                             bool enabled = true);
             void startRender();
             void endRender();
             void renderMesh(const Mesh& mesh, const Material& material, const Vector3& position,
                             const Quaternion& rotation,
                             float scale);
+
+            const Shader& getShader(const std::string& shader_name) const { return shaders.at(shader_name); }
 
         private:
             std::set<Model> models;
@@ -48,11 +52,12 @@ namespace SS3D
             int width, height;
             Camera camera{};
 
+            bool inRender{false};
+
             void setupLightShaderInformation();
             static Matrix makeTransformationMatrix(const Vector3& position, const Quaternion& rotation, float scale);
         };
     }
-
 } // SS3D
 
 #endif //INC_3DSOLARSYSTEM_RENDERE_H

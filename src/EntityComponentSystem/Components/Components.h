@@ -10,5 +10,6 @@
 #include "Transform.h"
 #include "Motion.h"
 #include "Orbiting.h"
+#include "Light.h"
 
 #endif //COMPONENTS_H

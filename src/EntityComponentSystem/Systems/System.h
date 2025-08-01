@@ -20,17 +20,9 @@ namespace SS3D
         System() = default;
         virtual ~System() = default;
 
-        virtual void initialize()
-        {
-        };
-
-        virtual void update(float dt)
-        {
-        };
-
-        virtual void render()
-        {
-        };
+        virtual void initialize() = 0;
+        virtual void update(float dt) = 0;
+        virtual void render() = 0;
 
         void setComponentsRegister(const std::shared_ptr<ComponentsRegister>& reg)
         {

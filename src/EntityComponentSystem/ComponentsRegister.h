@@ -29,7 +29,6 @@ namespace SS3D
             componentCollections[componentName] = std::make_shared<ComponentCollection<ComponentType>>();
 
             spdlog::debug("Registered {}", componentName);
-
         }
 
         template <typename ComponentType>

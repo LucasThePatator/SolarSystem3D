@@ -40,10 +40,10 @@ namespace SS3D
         }
 
         template <typename SystemType>
-        std::shared_ptr<System> getSystem()
+        std::shared_ptr<SystemType> getSystem()
         {
             const auto systemName = typeid(SystemType).name();
-            return systems.at(systemName);
+            return std::static_pointer_cast<SystemType>(systems.at(systemName));
         }
 
         void setComponentsRegister(const std::shared_ptr<ComponentsRegister>& reg)

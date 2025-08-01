@@ -43,8 +43,6 @@ void main()
 
     vec4 tint = colDiffuse * fragColor;
 
-    // NOTE: Implement here your fragment shader code
-
     for (int i = 0; i < MAX_LIGHTS; i++)
     {
         if (lights[i].enabled == 1)

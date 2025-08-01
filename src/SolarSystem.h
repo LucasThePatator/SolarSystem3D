@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <optional>
 #include <filesystem>
+#include <raylib.h>
 
 #include "EntityComponentSystem/EntityComponentSystem.h"
 #include "EntityComponentSystem/Types.h"
@@ -34,11 +35,9 @@ namespace SS3D
         std::shared_ptr<ComponentsRegister> componentsRegister;
         std::shared_ptr<EntityManager> entityManager;
 
-        std::shared_ptr<RenderingSystem> renderingSystem;
-
         const std::filesystem::path resourcePath;
 
-        void makeMaterial(const std::string &bodyName, Material &material) const;
+        void makeMaterial(const std::string& bodyName, Material& material) const;
     };
 } // SS3D
 

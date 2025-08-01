@@ -17,13 +17,12 @@ namespace SS3D
         POINT
     };
 
-    class Light
+    struct Light
     {
-        Renderer::LightHandle m_handle{-1};
+        Renderer::LightHandle handle{-1};
         LightType type{};
         Color color{WHITE};
         float attenuation{1.f};
-        Vector3 position{};
         Vector3 target{};
     };
 };

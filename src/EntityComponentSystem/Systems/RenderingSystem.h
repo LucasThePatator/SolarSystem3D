@@ -6,8 +6,6 @@
 #define RENDERINGSYSTEM_H
 
 #include "System.h"
-#include "../Components/Graphics.h"
-#include "src/Renderer/Renderer.h"
 
 namespace SS3D
 {
@@ -19,14 +17,15 @@ namespace SS3D
     class RenderingSystem : public System
     {
     public :
-        explicit RenderingSystem(const std::shared_ptr<SS3D::Renderer::Renderer> &renderer);
+        explicit RenderingSystem(const std::shared_ptr<SS3D::Renderer::Renderer>& renderer);
 
         void initialize() override;
         void update(float dt) override;
         void render() override;
 
-    private:
         std::shared_ptr<SS3D::Renderer::Renderer> renderer;
+
+    private:
     };
 }
 

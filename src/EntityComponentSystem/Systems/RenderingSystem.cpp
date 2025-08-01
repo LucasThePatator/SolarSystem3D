@@ -7,10 +7,12 @@
 
 #include "../EntityManager.h"
 #include "../ComponentsRegister.h"
+#include "src/Renderer/Renderer.h"
+#include "../Components/Graphics.h"
 
 namespace SS3D
 {
-    RenderingSystem::RenderingSystem(const std::shared_ptr<SS3D::Renderer::Renderer> &renderer) :
+    RenderingSystem::RenderingSystem(const std::shared_ptr<SS3D::Renderer::Renderer>& renderer) :
         System(),
         renderer(renderer)
     {
@@ -18,7 +20,6 @@ namespace SS3D
 
     void RenderingSystem::initialize()
     {
-        System::initialize();
     }
 
     void RenderingSystem::update(float dt)
