@@ -131,7 +131,7 @@ namespace SS3D::Renderer
     }
 
     void Renderer::renderMesh(const Mesh& mesh, const Material& material, const Vector3& position,
-                              const Quaternion& rotation, const float scale)
+                              const Quaternion& rotation, const float scale) const
     {
         if (!inRender)
         {

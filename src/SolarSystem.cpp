@@ -50,7 +50,8 @@ namespace SS3D
 
     Entity SolarSystem::createBody(const std::string& name, const double mass, const double radius,
                                    const Vector3& position,
-                                   const Quaternion& attitude, const std::optional<ComponentInstance> refBody)
+                                   const Quaternion& attitude, const std::optional<ComponentInstance> refBody,
+                                   const std::string& shaderName)
     {
         const auto bodyEntity = entityManager->createEntity();
         bodies[name] = bodyEntity;
@@ -67,7 +68,7 @@ namespace SS3D
                                                  });
 
         Material material;
-        makeMaterial(name, material);
+        makeMaterial(name, material, shaderName);
         const auto Model = LoadModel((resourcePath / "Planet.glb").c_str());
 
 
@@ -98,14 +99,14 @@ namespace SS3D
         ecs.systemRegister->getSystem<RenderingSystem>()->render();
     }
 
-    void SolarSystem::makeMaterial(const std::string& bodyName, Material& material) const
+    void SolarSystem::makeMaterial(const std::string& bodyName, Material& material, const std::string& shaderName) const
     {
         const auto texturesPath = resourcePath / "SolarTextures";
         const auto diffuseTexture = LoadTexture((texturesPath / (bodyName + "_diffuse.jpg")).c_str());
         const auto specularTexture = LoadTexture((texturesPath / (bodyName + "_specular.tif")).c_str());
         const auto normalMap = LoadTexture((texturesPath / (bodyName + "_normal.tif")).c_str());
         material = LoadMaterialDefault();
-        material.shader = ecs.systemRegister->getSystem<RenderingSystem>()->renderer->getShader("planet");
+        material.shader = ecs.systemRegister->getSystem<RenderingSystem>()->renderer->getShader(shaderName);
         SetMaterialTexture(&material, MATERIAL_MAP_ALBEDO, diffuseTexture);
         //SetMaterialTexture(&material, MATERIAL_MAP_SPECULAR, specularTexture);
         // SetMaterialTexture(&material, MATERIAL_MAP_NORMAL, normalMap);

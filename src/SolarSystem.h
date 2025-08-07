@@ -23,7 +23,8 @@ namespace SS3D
         explicit SolarSystem(EntityComponentSystem& ecs, std::filesystem::path resourcePath);
 
         Entity createBody(const std::string& name, double mass, double radius, const Vector3& position,
-                          const Quaternion& attitude, std::optional<ComponentInstance> refBody = std::nullopt);
+                          const Quaternion& attitude, std::optional<ComponentInstance> refBody = std::nullopt,
+                          const std::string& shaderName = "planet");
 
         void update(float deltaTime);
         void render();
@@ -37,7 +38,7 @@ namespace SS3D
 
         const std::filesystem::path resourcePath;
 
-        void makeMaterial(const std::string& bodyName, Material& material) const;
+        void makeMaterial(const std::string& bodyName, Material& material, const std::string& shaderName) const;
     };
 } // SS3D
 

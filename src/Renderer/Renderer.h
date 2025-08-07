@@ -40,7 +40,7 @@ namespace SS3D
             void endRender();
             void renderMesh(const Mesh& mesh, const Material& material, const Vector3& position,
                             const Quaternion& rotation,
-                            float scale);
+                            float scale) const;
 
             const Shader& getShader(const std::string& shader_name) const { return shaders.at(shader_name); }
 
