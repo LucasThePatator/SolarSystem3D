@@ -17,8 +17,9 @@ int main(int argc, char* argv[])
     solarSystem.createBody("Earth",
                            5.972e24,
                            6378,
-                           {0.f, 5, 0},
-                           {0, 0, 0, 1});
+                           {5.f, 5, 0},
+                           {0, 0, 0, 1},
+                           {0, 0, 0.1});
 
     solarSystem.createBody("Mars",
                            6.39e23,
@@ -30,12 +31,20 @@ int main(int argc, char* argv[])
                            1.988e30,
                            6960,
                            {0.f, 0, 0},
-                           {0, 0, 0, 1}, std::nullopt, "sun");
+                           {0, 0, 0, 1}, {}, std::nullopt, "sun");
 
+    double lastPrintTime = 0.;
     while (!WindowShouldClose())
     {
-        solarSystem.update(30);
+        solarSystem.update(0.03);
         solarSystem.render();
+
+        if (const auto elapsedTime = GetTime(); elapsedTime - lastPrintTime >= 3.f)
+        {
+            auto FPS = GetFPS();
+            spdlog::debug("FPS: {0}", FPS);
+            lastPrintTime = elapsedTime;
+        }
     }
 
     return 0;

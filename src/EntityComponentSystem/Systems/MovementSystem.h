@@ -12,6 +12,11 @@ namespace SS3D
     class MovementSystem : public System
     {
     public:
+
+        void initialize() override;
+        void update(float dt) override;
+        void render() override {};
+
         MovementSystem();
     };
 }

@@ -22,14 +22,21 @@ namespace SS3D
         ecs.componentsRegister->registerComponentType<Graphics>();
         ecs.componentsRegister->registerComponentType<Light>();
         ecs.componentsRegister->registerComponentType<Orbiting>();
+        ecs.componentsRegister->registerComponentType<Camera>();
+
 
         const auto renderer = std::make_shared<Renderer::Renderer>(1024, 768);
         renderer->initialize("/home/lucas/workspace/3DSolarSystem/src/shaders");
         auto renderingSystem = ecs.systemRegister->registerSystem<RenderingSystem>(Signature("00000101"), renderer);
         auto lightingSystem = ecs.systemRegister->registerSystem<LightingSystem>(Signature("00001001"), renderer);
+        auto motionSystem = ecs.systemRegister->registerSystem<MovementSystem>(Signature("00000011"));
+        auto controlsSystem = ecs.systemRegister->registerSystem<ControlsSystem>(Signature("00100001"), renderer);
+
 
         renderingSystem->initialize();
         lightingSystem->initialize();
+        motionSystem->initialize();
+        controlsSystem->initialize();
 
         const auto sunEntity = entityManager->createEntity();
         componentsRegister->addComponent<Transform>(sunEntity, SS3D::Transform{
@@ -45,12 +52,20 @@ namespace SS3D
                                                     .attenuation = 1000.f,
                                                 });
 
+        const auto cameraEntity = entityManager->createEntity();
+        componentsRegister->addComponent<Transform>(cameraEntity, SS3D::Transform{
+        .position = Vector3(0.0f, 0.0f, 0.0f),
+        });
+        componentsRegister->addComponent<Camera>(cameraEntity, SS3D::Camera{});
+
         spdlog::info("Solar System Initialized");
     }
 
     Entity SolarSystem::createBody(const std::string& name, const double mass, const double radius,
                                    const Vector3& position,
-                                   const Quaternion& attitude, const std::optional<ComponentInstance> refBody,
+                                   const Quaternion& attitude,
+                                   const Vector3& rotationSpeed,
+                                   const std::optional<ComponentInstance> refBody,
                                    const std::string& shaderName)
     {
         const auto bodyEntity = entityManager->createEntity();
@@ -64,7 +79,7 @@ namespace SS3D
 
         componentsRegister->addComponent<Motion>(bodyEntity, SS3D::Motion{
                                                      .velocity = Vector3{},
-                                                     .rotationSpeed = Vector3{},
+                                                     .rotationSpeed = rotationSpeed,
                                                  });
 
         Material material;
@@ -89,26 +104,37 @@ namespace SS3D
 
     void SolarSystem::update(const float deltaTime)
     {
+        ecs.systemRegister->getSystem<ControlsSystem>()->update(deltaTime);
         ecs.systemRegister->getSystem<LightingSystem>()->update(deltaTime);
         ecs.systemRegister->getSystem<RenderingSystem>()->update(deltaTime);
+        ecs.systemRegister->getSystem<MovementSystem>()->update(deltaTime);
     }
 
     void SolarSystem::render()
     {
+        ecs.systemRegister->getSystem<ControlsSystem>()->render();
         ecs.systemRegister->getSystem<LightingSystem>()->render();
         ecs.systemRegister->getSystem<RenderingSystem>()->render();
+        ecs.systemRegister->getSystem<MovementSystem>()->render();
+
     }
 
     void SolarSystem::makeMaterial(const std::string& bodyName, Material& material, const std::string& shaderName) const
     {
         const auto texturesPath = resourcePath / "SolarTextures";
         const auto diffuseTexture = LoadTexture((texturesPath / (bodyName + "_diffuse.jpg")).c_str());
-        const auto specularTexture = LoadTexture((texturesPath / (bodyName + "_specular.tif")).c_str());
+        const auto specularTexture = LoadTexture((texturesPath / (bodyName + "_specular.png")).c_str());
         const auto normalMap = LoadTexture((texturesPath / (bodyName + "_normal.tif")).c_str());
+        const auto nightTexture = LoadTexture((texturesPath / (bodyName + "_emit_night.jpg")).c_str());
+
         material = LoadMaterialDefault();
         material.shader = ecs.systemRegister->getSystem<RenderingSystem>()->renderer->getShader(shaderName);
         SetMaterialTexture(&material, MATERIAL_MAP_ALBEDO, diffuseTexture);
-        //SetMaterialTexture(&material, MATERIAL_MAP_SPECULAR, specularTexture);
-        // SetMaterialTexture(&material, MATERIAL_MAP_NORMAL, normalMap);
+        SetMaterialTexture(&material, MATERIAL_MAP_SPECULAR, specularTexture);
+        SetMaterialTexture(&material, MATERIAL_MAP_NORMAL, normalMap);
+        SetMaterialTexture(&material, MATERIAL_MAP_EMISSION, nightTexture);
+
+        // const auto nightLocation = GetShaderLocation(material.shader, "texture3");
+        // SetShaderValueTexture(material.shader, nightLocation, nightTexture);
     }
 }

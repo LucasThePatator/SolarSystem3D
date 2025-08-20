@@ -25,12 +25,6 @@ namespace SS3D::Renderer
         SetConfigFlags(FLAG_MSAA_4X_HINT);
         InitWindow(width, height, "SolarSystem 3D");
 
-        camera.position = {200.f, 0.f, 0.f}; // Camera position
-        camera.target = {0.0f, 0.0f, 0.0f}; // Camera looking at point
-        camera.up = {0.0f, 0.0f, 1.0f}; // Camera up vector (rotation towards target)
-        camera.fovy = 45.0f; // Camera field-of-view Y
-        camera.projection = CAMERA_PERSPECTIVE; // Camera mode type
-
         SetTargetFPS(60); // Set our game to run at 60 frames-per-second
 
         for (const auto& dir_entry : std::filesystem::directory_iterator(shadersPath))
@@ -46,6 +40,12 @@ namespace SS3D::Renderer
 
                 shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
                 shaders[fragmentShaderPath.stem().string()] = shader;
+
+                shader.locs[SHADER_LOC_MAP_DIFFUSE] = GetShaderLocation(shader, "diffuseMap");  // Choose any name you use on the shader for texture used as diffuse
+                shader.locs[SHADER_LOC_MAP_SPECULAR] = GetShaderLocation(shader, "specularMap"); // Choose any name you use on the shader for texture used as specular/metalness
+                shader.locs[SHADER_LOC_MAP_NORMAL] = GetShaderLocation(shader, "normalMap");   // Choose any name you use on the shader for texture used as normal
+                shader.locs[SHADER_LOC_MAP_EMISSION] = GetShaderLocation(shader, "nightEmissionMap");   // Choose any name you use on the shader for texture used as normal
+
             }
         }
 
@@ -79,9 +79,9 @@ namespace SS3D::Renderer
         const Matrix R = QuaternionToMatrix(rotation);
         const Matrix S = MatrixScale(scale, scale, scale);
 
-        const Matrix SR = MatrixMultiply(S, R);
-        const Matrix TSR = MatrixMultiply(T, SR);
-        return TSR;
+        const Matrix TS = MatrixMultiply(T, S);
+        const Matrix RTS = MatrixMultiply(R, TS);
+        return RTS;
     }
 
     void Renderer::updateLight(const LightHandle id, const Vector3& position, const Vector3& target,
@@ -149,6 +149,7 @@ namespace SS3D::Renderer
 
         const auto matrix = makeTransformationMatrix(position, rotation, scale);
         DrawMesh(mesh, material, matrix);
+
     }
 }
 

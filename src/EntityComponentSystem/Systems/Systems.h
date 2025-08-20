@@ -5,4 +5,6 @@
 #include "RenderingSystem.h"
 #include "PhysicsSystem.h"
 #include "LightingSystem.h"
+#include "ControlsSystem.h"
+
 #endif //SYSTEMS_H

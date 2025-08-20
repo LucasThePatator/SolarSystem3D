@@ -7,9 +7,10 @@ in vec4 fragColor;
 in vec3 fragNormal;
 
 // Input uniform values
-uniform sampler2D texture0;
-uniform sampler2D texture1;
-uniform sampler2D texture2;
+uniform sampler2D diffuseMap; //Diffuse
+uniform sampler2D specularMap; //Specular
+uniform sampler2D normalMap; //normal
+uniform sampler2D nightEmissionMap; //diffuse night
 
 uniform vec4 colDiffuse;
 
@@ -38,11 +39,12 @@ uniform vec3 viewPos;
 void main()
 {
     // Texel color fetching from texture sampler
-    vec4 texelColor = texture(texture0, fragTexCoord);
-    vec3 lightDot = vec3(0.0);
+    vec4 texelColor = texture(diffuseMap, fragTexCoord);
+    vec4 texelNight = texture(nightEmissionMap, fragTexCoord);
     vec3 normal = normalize(fragNormal);
     vec3 viewD = normalize(viewPos - fragPosition);
     vec3 specular = vec3(0.0);
+    vec4 specularTexelColor = texture(specularMap, fragTexCoord);
 
     vec4 tint = colDiffuse * fragColor;
 
@@ -62,16 +64,21 @@ void main()
                 light = normalize(lights[i].position - fragPosition);
             }
 
-            float NdotL = max(dot(normal, light), 0.0);
-            lightDot += lights[i].color.rgb*NdotL;
+            float NdotL = dot(normal, light);
+            if(NdotL > 0.01)
+            {
+                vec3 lightDot = lights[i].color.rgb*NdotL;
+                finalColor += texelColor * tint * vec4(lightDot, 1);
 
-            float specCo = 0.0;
-            if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
-            specular += specCo;
+                float specCo = 0.0;
+                if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 4.0); // 16 refers to shine
+                finalColor += specCo * specularTexelColor;
+            } else
+            {
+                finalColor += 0.07*texelNight;
+            }
         }
     }
-
-    finalColor = (texelColor*((tint + vec4(specular, 1.0))*vec4(lightDot, 1.0)));
     finalColor += texelColor*(ambient/10.0)*tint;
 
     // Gamma correction

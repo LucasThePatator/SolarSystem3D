@@ -13,7 +13,7 @@ namespace SS3D
     struct Motion
     {
         Vector3 velocity;
-        Vector3 rotationSpeed;
+        Vector3 rotationSpeed; //Rotation vector per second
     };
 }
 

@@ -44,13 +44,14 @@ namespace SS3D
 
             const Shader& getShader(const std::string& shader_name) const { return shaders.at(shader_name); }
 
+            ::Camera camera{};
+
         private:
             std::set<Model> models;
             std::unordered_map<std::string, std::array<LightShaderInformation, MAX_LIGHTS>> lightsShaderInformation;
             std::unordered_map<std::string, Shader> shaders;
 
             int width, height;
-            Camera camera{};
 
             bool inRender{false};
 

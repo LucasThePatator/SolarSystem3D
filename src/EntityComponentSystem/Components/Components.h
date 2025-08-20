@@ -11,5 +11,5 @@
 #include "Motion.h"
 #include "Orbiting.h"
 #include "Light.h"
-
+#include "Camera.h"
 #endif //COMPONENTS_H
