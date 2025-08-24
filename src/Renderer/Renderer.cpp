@@ -135,16 +135,12 @@ namespace SS3D::Renderer
     {
         if (!inRender)
         {
-            const std::string errorString{"Renderer::renderMesh: Not in render mode"};
-            spdlog::error(errorString);
-            throw std::runtime_error(errorString);
+            throw std::runtime_error("Renderer::renderMesh: Not in render mode");
         }
 
         if (!IsMaterialValid(material))
         {
-            const std::string errorString{"Material is not valid!"};
-            spdlog::error(errorString);
-            throw std::runtime_error(errorString);
+            throw std::runtime_error("Material is not valid!");
         }
 
         const auto matrix = makeTransformationMatrix(position, rotation, scale);

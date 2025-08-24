@@ -45,13 +45,18 @@ namespace SS3D
             instances.erase(e);
         }
 
-        ComponentType& getComponent(const Entity e)
+        [[nodiscard]] ComponentType& getComponent(const Entity e)
         {
             const auto componentInstance = instances.at(e);
             return data.at(componentInstance);
         }
 
-        Entity getEntity(const ComponentInstance instance)
+        [[nodiscard]] ComponentInstance getComponentInstance(const Entity e) const
+        {
+            return instances.at(e);
+        }
+
+        [[nodiscard]] Entity getEntity(const ComponentInstance instance)
         {
             for (const auto& [entity, localInstance] : instances)
             {

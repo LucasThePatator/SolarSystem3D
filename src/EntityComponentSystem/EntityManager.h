@@ -7,6 +7,9 @@
 
 #include <queue>
 #include <array>
+#include <optional>
+#include <unordered_map>
+
 #include "Systems/Systems.h"
 
 namespace SS3D
@@ -19,10 +22,12 @@ namespace SS3D
     public:
         EntityManager();
 
-        Entity createEntity();
+        Entity createEntity(const std::optional<std::string>& name = std::nullopt);
         void destroyEntity(Entity entity);
         void setSignature(Entity entity, Signature signature);
+
         [[nodiscard]] Signature getSignature(Entity entity) const;
+        std::optional<Entity> getEntityByName(const std::string &name);
 
         void setSystemRegister(const std::shared_ptr<SystemRegister>&);
         void setComponentRegister(const std::shared_ptr<ComponentsRegister>&);
@@ -30,6 +35,7 @@ namespace SS3D
     protected:
         std::queue<Entity> availableEntities{};
         std::array<Signature, MAX_ENTITIES> signatures{};
+        std::unordered_map<std::string, Entity> namesToEntity{};
 
         std::shared_ptr<SystemRegister> systemRegister{};
         std::shared_ptr<ComponentsRegister> componentsRegister{};

@@ -21,6 +21,7 @@ namespace SS3D
     public:
         SolarSystem() = delete;
         explicit SolarSystem(EntityComponentSystem& ecs, std::filesystem::path resourcePath);
+        void fromToml(const std::filesystem::path &filePath);
 
         Entity createBody(const std::string& name, double mass, double radius, const Vector3& position,
                           const Quaternion& attitude,

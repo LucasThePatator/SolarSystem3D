@@ -32,12 +32,13 @@ namespace SS3D
         }
 
         template <typename ComponentType>
-        void addComponent(const Entity entity, ComponentType&& component)
+        ComponentInstance addComponent(const Entity entity, ComponentType&& component)
         {
             auto collection = getComponentCollection<ComponentType>();
-            collection->addComponent(entity, std::forward<ComponentType>(component));
+            const auto instance = collection->addComponent(entity, std::forward<ComponentType>(component));
 
             updateSignature<ComponentType>(entity, true);
+            return instance;
         }
 
         template <typename ComponentType>
@@ -54,6 +55,13 @@ namespace SS3D
         {
             const auto collection = getComponentCollection<ComponentType>();
             return collection->getComponent(entity);
+        }
+
+        template <typename ComponentType>
+        ComponentInstance getComponentInstance(const Entity entity)
+        {
+            const auto collection = getComponentCollection<ComponentType>();
+            return collection->getComponentInstance(entity);
         }
 
         void onEntityDestroyed(Entity entity);

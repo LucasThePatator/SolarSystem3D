@@ -16,12 +16,23 @@ namespace SS3D
         }
     }
 
-    Entity EntityManager::createEntity()
+    Entity EntityManager::createEntity(const std::optional<std::string>& name)
     {
         if (availableEntities.empty())
             throw std::runtime_error("No available entities");
 
+        if (name.has_value() && namesToEntity.contains(*name))
+        {
+            const auto &existingEntityId = getEntityByName(*name);
+            throw std::runtime_error("Entity already exists with that name");
+        }
+
         const auto entity = availableEntities.front();
+        if (name.has_value())
+        {
+            namesToEntity[*name] = entity;
+        }
+
         availableEntities.pop();
         return entity;
     }
@@ -47,12 +58,20 @@ namespace SS3D
         systemRegister->onEntitySignatureChanged(entity, signature);
     }
 
-    Signature EntityManager::getSignature(const Entity entity) const
+    [[nodiscard]] Signature EntityManager::getSignature(const Entity entity) const
     {
         if (entity > MAX_ENTITIES)
             throw std::runtime_error("Entity out of range");
 
         return signatures.at(entity);
+    }
+
+    [[nodiscard]] std::optional<Entity> EntityManager::getEntityByName(const std::string& name)
+    {
+        if (namesToEntity.contains(name))
+            return namesToEntity.at(name);
+
+        return std::nullopt;
     }
 
     void EntityManager::setSystemRegister(const std::shared_ptr<SystemRegister>& sr)

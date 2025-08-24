@@ -3,11 +3,14 @@
 //
 
 #include <spdlog/spdlog.h>
+#include <toml++/toml.hpp>
+#include <iostream>
 
 #include "SolarSystem.h"
 #include "EntityComponentSystem/Components/Components.h"
 #include "EntityComponentSystem/Systems/RenderingSystem.h"
 #include "Renderer/Renderer.h"
+
 
 namespace SS3D
 {
@@ -32,33 +35,86 @@ namespace SS3D
         auto motionSystem = ecs.systemRegister->registerSystem<MovementSystem>(Signature("00000011"));
         auto controlsSystem = ecs.systemRegister->registerSystem<ControlsSystem>(Signature("00100001"), renderer);
 
-
         renderingSystem->initialize();
         lightingSystem->initialize();
         motionSystem->initialize();
         controlsSystem->initialize();
 
-        const auto sunEntity = entityManager->createEntity();
-        componentsRegister->addComponent<Transform>(sunEntity, SS3D::Transform{
-                                                        .position = Vector3(0.0f, 0.0f, 0.0f),
-                                                        .rotation = Quaternion(0.0f, 0.0f, 0.0f, 1.0f),
-                                                        .scale = 1.f,
-                                                    });
-
-        componentsRegister->addComponent<Light>(sunEntity, SS3D::Light{
-                                                    .handle = 0,
-                                                    .type = LightType::POINT,
-                                                    .color = WHITE,
-                                                    .attenuation = 1000.f,
-                                                });
-
         const auto cameraEntity = entityManager->createEntity();
         componentsRegister->addComponent<Transform>(cameraEntity, SS3D::Transform{
-        .position = Vector3(0.0f, 0.0f, 0.0f),
-        });
+                                                        .position = Vector3(0.0f, 0.0f, 0.0f),
+                                                    });
         componentsRegister->addComponent<Camera>(cameraEntity, SS3D::Camera{});
 
         spdlog::info("Solar System Initialized");
+    }
+
+    void SolarSystem::fromToml(const std::filesystem::path& filePath)
+    {
+        auto fillRaylibType = [](const toml::array* array, float* const raylibTypePtr)
+        {
+            for (size_t i = 0; i < array->size(); ++i)
+            {
+                auto& elem = (*array)[i];
+                elem.visit([i, raylibTypePtr]<typename elType>(elType&& el)
+                {
+                    if constexpr (toml::is_integer<elType>)
+                        raylibTypePtr[i] = static_cast<float>(**el.as_integer());
+                    if constexpr (toml::is_floating_point<elType>)
+                        raylibTypePtr[i] = static_cast<float>(**el.as_floating_point());
+                });
+            }
+        };
+
+        toml::table tbl = toml::parse_file(filePath.string());
+        tbl.for_each([&]<typename EntryType>(EntryType&& entry)
+        {
+            if constexpr (toml::is_table<EntryType>)
+            {
+                const auto name = *entry["name"].template value<std::string>();
+                const auto mass = *entry["mass"].template value<double>();
+                const auto radius = *entry["radius"].template value<double>();
+                const auto positionArray = entry["position"].as_array();
+                Vector3 position{};
+                auto* positionPtr = reinterpret_cast<float*>(&position);
+                fillRaylibType(positionArray, positionPtr);
+
+                const auto attitudeArray = entry["attitude"].as_array();
+                Quaternion attitude{};
+                auto* attitudePtr = reinterpret_cast<float*>(&attitude);
+                fillRaylibType(attitudeArray, attitudePtr);
+
+                const auto rotationSpeedArray = entry["rotationSpeed"].as_array();
+                Vector3 rotationSpeed{};
+                auto* rotationSpeedPtr = reinterpret_cast<float*>(&rotationSpeed);
+                fillRaylibType(rotationSpeedArray, rotationSpeedPtr);
+
+                /*const auto refBodyName = entry["refBody"].template value<std::string>();
+                std::optional<ComponentInstance> refBody{std::nullopt};
+                if (refBodyName.has_value())
+                {
+                    const auto refEntity = entityManager->getEntityByName(*refBodyName);
+                    if (!refEntity.has_value())
+                        throw std::runtime_error("Could not find ref body");
+
+                    refBody = componentsRegister->getComponentInstance<Orbiting>(*refEntity);
+                }*/
+
+                const auto shaderName = entry["shaderName"].template value_or<std::string>("planet");
+                const auto currentEntity = createBody(name, mass, radius, position, attitude, rotationSpeed,
+                                                      std::nullopt, shaderName);
+
+                if (name == "Sun")
+                {
+                    componentsRegister->addComponent<Light>(currentEntity, SS3D::Light{
+                                                                .handle = 0,
+                                                                .type = LightType::POINT,
+                                                                .color = WHITE,
+                                                                .attenuation = 1000.f,
+                                                            });
+                }
+            }
+        });
     }
 
     Entity SolarSystem::createBody(const std::string& name, const double mass, const double radius,
@@ -68,7 +124,7 @@ namespace SS3D
                                    const std::optional<ComponentInstance> refBody,
                                    const std::string& shaderName)
     {
-        const auto bodyEntity = entityManager->createEntity();
+        const auto bodyEntity = entityManager->createEntity(name);
         bodies[name] = bodyEntity;
 
         componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
@@ -116,7 +172,6 @@ namespace SS3D
         ecs.systemRegister->getSystem<LightingSystem>()->render();
         ecs.systemRegister->getSystem<RenderingSystem>()->render();
         ecs.systemRegister->getSystem<MovementSystem>()->render();
-
     }
 
     void SolarSystem::makeMaterial(const std::string& bodyName, Material& material, const std::string& shaderName) const
