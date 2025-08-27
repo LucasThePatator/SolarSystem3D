@@ -4,9 +4,11 @@
 
 #ifndef INC_3DSOLARSYSTEM_RENDERE_H
 #define INC_3DSOLARSYSTEM_RENDERE_H
+
+#include <raylib.h>
+
 #include <array>
 #include <unordered_map>
-#include <raylib.h>
 #include <set>
 #include <string>
 #include <filesystem>

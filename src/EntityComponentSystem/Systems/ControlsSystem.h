@@ -6,7 +6,6 @@
 #define INC_3DSOLARSYSTEM_CONTROLSSYSTEM_H
 
 #include "System.h"
-#include "src/EntityComponentSystem/Components/Camera.h"
 
 namespace SS3D
 {

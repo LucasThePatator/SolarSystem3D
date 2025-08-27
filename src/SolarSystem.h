@@ -5,14 +5,15 @@
 #ifndef INC_3DSOLARSYSTEM_SOLARSYSTEM_H
 #define INC_3DSOLARSYSTEM_SOLARSYSTEM_H
 
+#include <raylib.h>
+#include <toml++/toml.hpp>
+
 #include <unordered_map>
 #include <optional>
 #include <filesystem>
-#include <raylib.h>
 
 #include "EntityComponentSystem/EntityComponentSystem.h"
 #include "EntityComponentSystem/Types.h"
-#include <toml++/toml.hpp>
 
 namespace SS3D
 {
