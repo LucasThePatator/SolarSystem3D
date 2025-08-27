@@ -3,8 +3,6 @@
 //
 
 #include <spdlog/spdlog.h>
-#include <toml++/toml.hpp>
-#include <iostream>
 
 #include "SolarSystem.h"
 #include "EntityComponentSystem/Components/Components.h"
@@ -14,12 +12,15 @@
 
 namespace SS3D
 {
-    SolarSystem::SolarSystem(EntityComponentSystem& ecs, std::filesystem::path resourcePath) :
+    SolarSystem::SolarSystem(EntityComponentSystem& ecs, const std::filesystem::path &configurationFile) :
         ecs(ecs),
         componentsRegister(ecs.componentsRegister),
-        entityManager(ecs.entityManager),
-        resourcePath(std::move(resourcePath))
+        entityManager(ecs.entityManager)
     {
+        const toml::table configurationTbl = toml::parse_file(configurationFile.string());
+        const auto resourcesTbl = *configurationTbl.at("resources").as_table();
+        resourcePath = std::filesystem::path(*resourcesTbl.at("resourcePath").value<std::string>());
+
         ecs.componentsRegister->registerComponentType<SS3D::Transform>();
         ecs.componentsRegister->registerComponentType<Motion>();
         ecs.componentsRegister->registerComponentType<Graphics>();
@@ -29,7 +30,7 @@ namespace SS3D
 
 
         const auto renderer = std::make_shared<Renderer::Renderer>(1024, 768);
-        renderer->initialize("/home/lucas/workspace/3DSolarSystem/src/shaders");
+        renderer->initialize(*resourcesTbl.at("shaderPath").value<std::string>());
         auto renderingSystem = ecs.systemRegister->registerSystem<RenderingSystem>(Signature("00000101"), renderer);
         auto lightingSystem = ecs.systemRegister->registerSystem<LightingSystem>(Signature("00001001"), renderer);
         auto motionSystem = ecs.systemRegister->registerSystem<MovementSystem>(Signature("00000011"));
@@ -46,10 +47,12 @@ namespace SS3D
                                                     });
         componentsRegister->addComponent<Camera>(cameraEntity, SS3D::Camera{});
 
+        const auto sceneTable = *configurationTbl.at("scene").as_table();
+        setSystem(sceneTable);
         spdlog::info("Solar System Initialized");
     }
 
-    void SolarSystem::fromToml(const std::filesystem::path& filePath)
+    void SolarSystem::setSystem(const toml::table &tbl)
     {
         auto fillRaylibType = [](const toml::array* array, float* const raylibTypePtr)
         {
@@ -66,7 +69,6 @@ namespace SS3D
             }
         };
 
-        toml::table tbl = toml::parse_file(filePath.string());
         tbl.for_each([&]<typename EntryType>(EntryType&& entry)
         {
             if constexpr (toml::is_table<EntryType>)

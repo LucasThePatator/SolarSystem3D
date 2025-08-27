@@ -12,9 +12,8 @@ int main(int argc, char* argv[])
     spdlog::info("Started 3DSolarSystem");
 
     EntityComponentSystem ecs;
-    SolarSystem solarSystem(ecs, std::filesystem::path("/mnt/e/Data/SS3D"));
+    SolarSystem solarSystem(ecs, std::filesystem::path(argv[1]));
 
-    solarSystem.fromToml("/mnt/e/Data/SS3D/solarsystem.toml");
     double lastPrintTime = 0.;
     while (!WindowShouldClose())
     {

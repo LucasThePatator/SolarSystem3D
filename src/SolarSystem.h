@@ -12,7 +12,7 @@
 
 #include "EntityComponentSystem/EntityComponentSystem.h"
 #include "EntityComponentSystem/Types.h"
-#include "EntityComponentSystem/Components/Orbiting.h"
+#include <toml++/toml.hpp>
 
 namespace SS3D
 {
@@ -20,8 +20,7 @@ namespace SS3D
     {
     public:
         SolarSystem() = delete;
-        explicit SolarSystem(EntityComponentSystem& ecs, std::filesystem::path resourcePath);
-        void fromToml(const std::filesystem::path &filePath);
+        explicit SolarSystem(EntityComponentSystem& ecs, const std::filesystem::path &configurationFile);
 
         Entity createBody(const std::string& name, double mass, double radius, const Vector3& position,
                           const Quaternion& attitude,
@@ -39,7 +38,8 @@ namespace SS3D
         std::shared_ptr<ComponentsRegister> componentsRegister;
         std::shared_ptr<EntityManager> entityManager;
 
-        const std::filesystem::path resourcePath;
+        std::filesystem::path resourcePath;
+        void setSystem(const toml::table &tbl);
 
         void makeMaterial(const std::string& bodyName, Material& material, const std::string& shaderName) const;
     };

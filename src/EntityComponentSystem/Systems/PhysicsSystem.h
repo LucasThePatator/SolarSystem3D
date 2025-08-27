@@ -14,6 +14,12 @@ namespace SS3D
 {
     class PhysicsSystem : public System
     {
+    public:
+        explicit PhysicsSystem();
+
+        void initialize() override;
+        void update(float dt) override;
+        void render() override;
     };
 }
 

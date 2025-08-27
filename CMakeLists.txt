@@ -45,6 +45,8 @@ add_executable(3DSolarSystem src/main.cpp
         src/EntityComponentSystem/Components/Camera.h
         src/EntityComponentSystem/Systems/ControlsSystem.cpp
         src/EntityComponentSystem/Systems/ControlsSystem.h
+        src/NBodySimulation/Octree.cpp
+        src/NBodySimulation/Octree.h
 )
 
 target_link_libraries(3DSolarSystem PUBLIC raylib)
