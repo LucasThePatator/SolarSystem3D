@@ -6,8 +6,6 @@
 #define INC_3DSOLARSYSTEM_LOG_H
 
 #include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <cstdio>
 
 namespace SS3D
 {

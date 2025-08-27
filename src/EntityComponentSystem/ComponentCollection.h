@@ -5,7 +5,6 @@
 #ifndef COMPONENTCOLLECTION_H
 #define COMPONENTCOLLECTION_H
 
-#include <cstdint>
 #include <map>
 #include <stdexcept>
 #include "Types.h"
