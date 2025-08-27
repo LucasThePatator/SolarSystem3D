@@ -10,9 +10,12 @@
 #include <raylib.h>
 #include <vector>
 
-namespace SS3D {
-    class Octree {
-        struct Node {
+namespace SS3D
+{
+    class Octree
+    {
+        struct Node
+        {
             std::array<std::shared_ptr<Node>, 8> children;
             std::shared_ptr<Node> parent;
 
@@ -21,9 +24,9 @@ namespace SS3D {
             Vector3 position{0, 0, 0};
             double mass{0.};
         };
-
     public:
-        explicit Octree(const std::vector<Vector3> &positions);
+
+        Octree(const std::vector<Vector3> &positions);
     };
 } // SS3D
 
