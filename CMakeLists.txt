@@ -1,7 +1,9 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.28)
 project(3DSolarSystem)
 
-set(CMAKE_CXX_STANDARD 20)
+add_subdirectory(tests)
+
+set(CMAKE_CXX_STANDARD 23)
 include_directories(/usr/local/include ./)
 
 add_executable(3DSolarSystem src/main.cpp
@@ -47,6 +49,8 @@ add_executable(3DSolarSystem src/main.cpp
         src/EntityComponentSystem/Systems/ControlsSystem.h
         src/NBodySimulation/Octree.cpp
         src/NBodySimulation/Octree.h
+        src/NBodySimulation/BarnesHut.cpp
+        src/NBodySimulation/BarnesHut.h
 )
 
 target_link_libraries(3DSolarSystem PUBLIC raylib)

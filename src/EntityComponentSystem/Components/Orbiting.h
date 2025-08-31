@@ -11,7 +11,7 @@ namespace SS3D
 {
     struct Orbiting
     {
-        double mass = 1.0;
+        float mass = 1.f;
         std::optional<ComponentInstance> refBody{};
     };
 }

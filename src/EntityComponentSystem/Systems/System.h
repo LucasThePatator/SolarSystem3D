@@ -31,6 +31,7 @@ namespace SS3D
 
         void registerEntity(Entity entity);
         void unregisterEntity(Entity entity);
+        bool isEntityRegistered(Entity entity);
 
     protected:
         std::shared_ptr<ComponentsRegister> componentsRegister{};

@@ -9,17 +9,21 @@
 
 #include "System.h"
 #include "../Components/Transform.h"
+#include "../../NBodySimulation/BarnesHut.h"
 
 namespace SS3D
 {
     class PhysicsSystem : public System
     {
     public:
-        explicit PhysicsSystem();
+        explicit PhysicsSystem(float theta, float G);
 
         void initialize() override;
         void update(float dt) override;
         void render() override;
+
+    private:
+        BarnesHut barnesHut;
     };
 }
 

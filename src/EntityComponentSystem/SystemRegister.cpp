@@ -12,6 +12,9 @@ namespace SS3D
     {
         for (const auto& [systemName, system] : systems)
         {
+            if (system->isEntityRegistered(entity))
+                continue;
+
             if ((signatures.at(systemName) & entitySignature) == signatures.at(systemName))
             {
                 system->registerEntity(entity);

@@ -4,6 +4,8 @@
 
 #include "System.h"
 
+#include <algorithm>
+
 namespace SS3D
 {
     void System::registerEntity(const Entity entity)
@@ -21,6 +23,12 @@ namespace SS3D
                 return;
             }
         }
-        return;
+    }
+
+    bool System::isEntityRegistered(const Entity entity)
+    {
+        {
+            return std::ranges::find(entities, entity) != entities.cend();
+        }
     }
 }

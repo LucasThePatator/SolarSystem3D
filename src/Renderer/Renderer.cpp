@@ -79,9 +79,9 @@ namespace SS3D::Renderer
         const Matrix R = QuaternionToMatrix(rotation);
         const Matrix S = MatrixScale(scale, scale, scale);
 
-        const Matrix TS = MatrixMultiply(T, S);
-        const Matrix RTS = MatrixMultiply(R, TS);
-        return RTS;
+        const Matrix RT = MatrixMultiply(R, T);
+        const Matrix SRT = MatrixMultiply(S, RT);
+        return SRT;
     }
 
     void Renderer::updateLight(const LightHandle id, const Vector3& position, const Vector3& target,

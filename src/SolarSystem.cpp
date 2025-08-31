@@ -9,10 +9,11 @@
 #include "EntityComponentSystem/Systems/RenderingSystem.h"
 #include "Renderer/Renderer.h"
 
+constexpr float modelScale = 1.f / 1000000;
 
 namespace SS3D
 {
-    SolarSystem::SolarSystem(EntityComponentSystem& ecs, const std::filesystem::path &configurationFile) :
+    SolarSystem::SolarSystem(EntityComponentSystem& ecs, const std::filesystem::path& configurationFile) :
         ecs(ecs),
         componentsRegister(ecs.componentsRegister),
         entityManager(ecs.entityManager)
@@ -35,9 +36,12 @@ namespace SS3D
         auto lightingSystem = ecs.systemRegister->registerSystem<LightingSystem>(Signature("00001001"), renderer);
         auto motionSystem = ecs.systemRegister->registerSystem<MovementSystem>(Signature("00000011"));
         auto controlsSystem = ecs.systemRegister->registerSystem<ControlsSystem>(Signature("00100001"), renderer);
+        auto physicsSystem = ecs.systemRegister->registerSystem<
+            PhysicsSystem>(Signature("00010011"), 0.1f, 6.67259e-29);
 
         renderingSystem->initialize();
         lightingSystem->initialize();
+        physicsSystem->initialize();
         motionSystem->initialize();
         controlsSystem->initialize();
 
@@ -52,7 +56,7 @@ namespace SS3D
         spdlog::info("Solar System Initialized");
     }
 
-    void SolarSystem::setSystem(const toml::table &tbl)
+    void SolarSystem::setSystem(const toml::table& tbl)
     {
         auto fillRaylibType = [](const toml::array* array, float* const raylibTypePtr)
         {
@@ -76,6 +80,7 @@ namespace SS3D
                 const auto name = *entry["name"].template value<std::string>();
                 const auto mass = *entry["mass"].template value<double>();
                 const auto radius = *entry["radius"].template value<double>();
+                const auto scale = *entry["scale"].template value<double>();
                 const auto positionArray = entry["position"].as_array();
                 Vector3 position{};
                 auto* positionPtr = reinterpret_cast<float*>(&position);
@@ -103,7 +108,7 @@ namespace SS3D
                 }*/
 
                 const auto shaderName = entry["shaderName"].template value_or<std::string>("planet");
-                const auto currentEntity = createBody(name, mass, radius, position, attitude, rotationSpeed,
+                const auto currentEntity = createBody(name, mass, radius * scale, position, attitude, rotationSpeed,
                                                       std::nullopt, shaderName);
 
                 if (name == "Sun")
@@ -119,7 +124,7 @@ namespace SS3D
         });
     }
 
-    Entity SolarSystem::createBody(const std::string& name, const double mass, const double radius,
+    Entity SolarSystem::createBody(const std::string& name, const float mass, const float radius,
                                    const Vector3& position,
                                    const Quaternion& attitude,
                                    const Vector3& rotationSpeed,
@@ -130,9 +135,9 @@ namespace SS3D
         bodies[name] = bodyEntity;
 
         componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
-                                                        .position = position,
+                                                        .position = Vector3Scale(position, modelScale),
                                                         .rotation = attitude,
-                                                        .scale = static_cast<float>(radius) / 1000,
+                                                        .scale = radius * modelScale,
                                                     });
 
         componentsRegister->addComponent<Motion>(bodyEntity, SS3D::Motion{
@@ -163,16 +168,18 @@ namespace SS3D
     void SolarSystem::update(const float deltaTime)
     {
         ecs.systemRegister->getSystem<ControlsSystem>()->update(deltaTime);
+        ecs.systemRegister->getSystem<PhysicsSystem>()->update(deltaTime);
+        ecs.systemRegister->getSystem<MovementSystem>()->update(deltaTime);
         ecs.systemRegister->getSystem<LightingSystem>()->update(deltaTime);
         ecs.systemRegister->getSystem<RenderingSystem>()->update(deltaTime);
-        ecs.systemRegister->getSystem<MovementSystem>()->update(deltaTime);
     }
 
     void SolarSystem::render()
     {
         ecs.systemRegister->getSystem<ControlsSystem>()->render();
-        ecs.systemRegister->getSystem<LightingSystem>()->render();
+        ecs.systemRegister->getSystem<PhysicsSystem>()->render();
         ecs.systemRegister->getSystem<RenderingSystem>()->render();
+        ecs.systemRegister->getSystem<LightingSystem>()->render();
         ecs.systemRegister->getSystem<MovementSystem>()->render();
     }
 

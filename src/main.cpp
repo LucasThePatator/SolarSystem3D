@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
     double lastPrintTime = 0.;
     while (!WindowShouldClose())
     {
-        solarSystem.update(0.03);
+        solarSystem.update(0.0166);
         solarSystem.render();
 
         if (const auto elapsedTime = GetTime(); elapsedTime - lastPrintTime >= 3.f)

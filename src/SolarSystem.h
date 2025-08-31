@@ -8,9 +8,9 @@
 #include <raylib.h>
 #include <toml++/toml.hpp>
 
-#include <unordered_map>
-#include <optional>
 #include <filesystem>
+#include <optional>
+#include <unordered_map>
 
 #include "EntityComponentSystem/EntityComponentSystem.h"
 #include "EntityComponentSystem/Types.h"
@@ -21,9 +21,9 @@ namespace SS3D
     {
     public:
         SolarSystem() = delete;
-        explicit SolarSystem(EntityComponentSystem& ecs, const std::filesystem::path &configurationFile);
+        explicit SolarSystem(EntityComponentSystem& ecs, const std::filesystem::path& configurationFile);
 
-        Entity createBody(const std::string& name, double mass, double radius, const Vector3& position,
+        Entity createBody(const std::string& name, float mass, float radius, const Vector3& position,
                           const Quaternion& attitude,
                           const Vector3& rotationSpeed = Vector3{},
                           std::optional<ComponentInstance> refBody = std::nullopt,
@@ -40,7 +40,7 @@ namespace SS3D
         std::shared_ptr<EntityManager> entityManager;
 
         std::filesystem::path resourcePath;
-        void setSystem(const toml::table &tbl);
+        void setSystem(const toml::table& tbl);
 
         void makeMaterial(const std::string& bodyName, Material& material, const std::string& shaderName) const;
     };
