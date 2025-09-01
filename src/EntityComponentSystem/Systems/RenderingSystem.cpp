@@ -9,6 +9,7 @@
 #include "../ComponentsRegister.h"
 #include "src/Renderer/Renderer.h"
 #include "../Components/Graphics.h"
+#include "../Components/Transform.h"
 
 namespace SS3D
 {
@@ -32,7 +33,7 @@ namespace SS3D
         for (const auto& entity : entities)
         {
             const auto& graphic = componentsRegister->getComponent<Graphics>(entity);
-            const auto& [position, rotation, scale] = componentsRegister->getComponent<Transform>(entity);
+            const auto& [position, rotation, scale] = componentsRegister->getComponent<SS3D::Transform>(entity);
             if (graphic.type == GraphicsType::MODEL)
             {
                 renderer->renderMesh(graphic.model.meshes[0], graphic.material, position, rotation,

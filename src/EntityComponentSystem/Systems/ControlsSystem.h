@@ -21,9 +21,14 @@ namespace SS3D
 
         void initialize() override;
         void update(float dt) override;
-        void render() override {};
+        void render() override;
 
         std::shared_ptr<SS3D::Renderer::Renderer> renderer;
+
+    private:
+        void renderGui();
+
+        //Vector3 currentTarget{};
     };
 } // SS3D
 

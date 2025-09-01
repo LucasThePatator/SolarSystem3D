@@ -6,6 +6,7 @@
 #include "src/Renderer/Renderer.h"
 #include "../ComponentsRegister.h"
 #include "src/EntityComponentSystem/Components/Light.h"
+#include "src/EntityComponentSystem/Components/Transform.h"
 
 namespace SS3D
 {
@@ -22,7 +23,7 @@ namespace SS3D
     {
         for (const auto& entity : entities)
         {
-            const auto& [position, rotation, scale] = componentsRegister->getComponent<Transform>(entity);
+            const auto& [position, rotation, scale] = componentsRegister->getComponent<SS3D::Transform>(entity);
             const auto& light = componentsRegister->getComponent<Light>(entity);
             renderer->updateLight(light.handle, position, light.target, light.color, true);
         }

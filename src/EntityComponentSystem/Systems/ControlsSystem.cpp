@@ -4,13 +4,18 @@
 
 #include "ControlsSystem.h"
 
-#include <raylib.h>
 #include "src/EntityComponentSystem/ComponentsRegister.h"
 #include "src/EntityComponentSystem/Components/Camera.h"
+#include "src/EntityComponentSystem/Components/Transform.h"
 #include "src/Renderer/Renderer.h"
+
+//#define RAYGUI_IMPLEMENTATION
+//#include "src/Renderer/raygui.h"
 
 namespace SS3D
 {
+    struct Transform;
+
     ControlsSystem::ControlsSystem(const std::shared_ptr<SS3D::Renderer::Renderer>& renderer) :
     renderer(renderer)
     {
@@ -39,7 +44,7 @@ namespace SS3D
         }
 
         const auto cameraEntity = entities[0];
-        auto &transform = componentsRegister->getComponent<Transform>(cameraEntity);
+        auto& transform = componentsRegister->getComponent<SS3D::Transform>(cameraEntity);
         auto& [cameraMode] = componentsRegister->getComponent<SS3D::Camera>(cameraEntity);
 
         auto& [position, target, up, fovy, projection] = renderer->camera;
@@ -74,5 +79,15 @@ namespace SS3D
         position = transform.position;
         UpdateCamera(&renderer->camera, cameraMode);
         transform.position = position;
+    }
+
+    void ControlsSystem::render()
+    {
+        renderGui();
+    }
+
+    void ControlsSystem::renderGui()
+    {
+        //GuiButton({0, 0, 20, 20}, "Button");
     }
 } // SS3D

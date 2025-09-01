@@ -5,7 +5,6 @@
 #ifndef INC_3DSOLARSYSTEM_ENTITYCOMPONENTSYSTEM_H
 #define INC_3DSOLARSYSTEM_ENTITYCOMPONENTSYSTEM_H
 #include <memory>
-#include <ratio>
 
 #include "ComponentsRegister.h"
 #include "EntityManager.h"

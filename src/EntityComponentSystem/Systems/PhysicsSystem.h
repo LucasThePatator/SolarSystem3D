@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "System.h"
-#include "../Components/Transform.h"
 #include "../../NBodySimulation/BarnesHut.h"
 
 namespace SS3D

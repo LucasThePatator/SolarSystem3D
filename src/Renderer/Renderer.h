@@ -13,56 +13,54 @@
 #include <string>
 #include <filesystem>
 
-namespace SS3D
+
+namespace SS3D::Renderer
 {
-    namespace Renderer
+    constexpr size_t MAX_LIGHTS = 4;
+
+    using LightHandle = int32_t;
+
+    struct LightShaderInformation
     {
-        constexpr size_t MAX_LIGHTS = 4;
+        int enabledLoc{-1};
+        int typeLoc{-1};
+        int positionLoc{-1};
+        int targetLoc{-1};
+        int colorLoc{-1};
+        int attenuationLoc{-1};
+    };
 
-        using LightHandle = int32_t;
+    class Renderer
+    {
+    public:
+        Renderer(int width, int height);
+        void initialize(const std::filesystem::path& shadersPath);
+        void updateLight(LightHandle id, const Vector3& position, const Vector3& target, const Color& color,
+                         bool enabled = true);
+        void startRender();
+        void endRender();
+        void renderMesh(const Mesh& mesh, const Material& material, const Vector3& position,
+                        const Quaternion& rotation,
+                        float scale) const;
 
-        struct LightShaderInformation
-        {
-            int enabledLoc{-1};
-            int typeLoc{-1};
-            int positionLoc{-1};
-            int targetLoc{-1};
-            int colorLoc{-1};
-            int attenuationLoc{-1};
-        };
+        const Shader& getShader(const std::string& shader_name) const { return shaders.at(shader_name); }
 
-        class Renderer
-        {
-        public:
-            Renderer(int width, int height);
-            void initialize(const std::filesystem::path& shadersPath);
-            void updateLight(LightHandle id, const Vector3& position, const Vector3& target, const Color& color,
-                             bool enabled = true);
-            void startRender();
-            void endRender();
-            void renderMesh(const Mesh& mesh, const Material& material, const Vector3& position,
-                            const Quaternion& rotation,
-                            float scale) const;
+        ::Camera camera{};
 
-            void renderGui();
+    private:
+        std::set<Model> models;
+        std::unordered_map<std::string, std::array<LightShaderInformation, MAX_LIGHTS>> lightsShaderInformation;
+        std::unordered_map<std::string, Shader> shaders;
 
-            const Shader& getShader(const std::string& shader_name) const { return shaders.at(shader_name); }
+        int width, height;
 
-            ::Camera camera{};
+        bool inRender{false};
 
-        private:
-            std::set<Model> models;
-            std::unordered_map<std::string, std::array<LightShaderInformation, MAX_LIGHTS>> lightsShaderInformation;
-            std::unordered_map<std::string, Shader> shaders;
+        void setupLightShaderInformation();
+        static Matrix makeTransformationMatrix(const Vector3& position, const Quaternion& rotation, float scale);
+    };
+}
 
-            int width, height;
-
-            bool inRender{false};
-
-            void setupLightShaderInformation();
-            static Matrix makeTransformationMatrix(const Vector3& position, const Quaternion& rotation, float scale);
-        };
-    }
-} // SS3D
+// SS3D
 
 #endif //INC_3DSOLARSYSTEM_RENDERE_H

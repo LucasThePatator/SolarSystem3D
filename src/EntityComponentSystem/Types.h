@@ -6,6 +6,7 @@
 #define TYPES_H
 
 #include <bitset>
+#include <cstdlib>
 
 namespace SS3D
 {

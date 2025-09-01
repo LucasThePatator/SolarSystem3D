@@ -5,7 +5,7 @@
 #ifndef TRANSFORM_H
 #define TRANSFORM_H
 
-#include "raymath.h"
+#include <raylib.h>
 
 namespace SS3D
 {

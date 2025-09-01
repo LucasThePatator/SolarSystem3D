@@ -2,18 +2,20 @@
 // Created by lucas on 7/26/25.
 //
 
+#include "SolarSystem.h"
+
 #include <spdlog/spdlog.h>
+#include <raymath.h>
 
 extern "C" {
 #include <lualib.h>
 #include <lauxlib.h>
 }
 
-
-#include "SolarSystem.h"
 #include "EntityComponentSystem/Components/Components.h"
 #include "EntityComponentSystem/Systems/RenderingSystem.h"
 #include "Renderer/Renderer.h"
+
 
 constexpr float modelScale = 1.f / 1000000;
 

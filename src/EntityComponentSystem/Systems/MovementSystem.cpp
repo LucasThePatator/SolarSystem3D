@@ -1,12 +1,14 @@
 //
 // Created by lucas on 6/29/25.
 //
+#include <raylib.h>
 #include <raymath.h>
 
 #include "MovementSystem.h"
 
 #include "src/EntityComponentSystem/ComponentsRegister.h"
 #include "src/EntityComponentSystem/Components/Motion.h"
+#include "src/EntityComponentSystem/Components/Transform.h"
 
 namespace SS3D
 {

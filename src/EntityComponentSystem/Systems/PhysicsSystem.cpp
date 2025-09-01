@@ -8,6 +8,9 @@
 #include "src/EntityComponentSystem/ComponentsRegister.h"
 #include "src/EntityComponentSystem/Components/Motion.h"
 #include "src/EntityComponentSystem/Components/Orbiting.h"
+#include "src/EntityComponentSystem/Components/Transform.h"
+
+#include <raymath.h>
 
 namespace SS3D
 {
@@ -28,7 +31,7 @@ namespace SS3D
 
         for (const auto& entity : entities)
         {
-            const auto& [position, rotation, scale] = componentsRegister->getComponent<Transform>(entity);
+            const auto& [position, rotation, scale] = componentsRegister->getComponent<SS3D::Transform>(entity);
             const auto& [mass, refBody] = componentsRegister->getComponent<Orbiting>(entity);
 
             positions.push_back(position);

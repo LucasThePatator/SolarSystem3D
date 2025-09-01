@@ -5,7 +5,7 @@
 #ifndef MOTION_H
 #define MOTION_H
 
-#include "raymath.h"
+#include <raylib.h>
 
 
 namespace SS3D

@@ -51,7 +51,6 @@ add_executable(3DSolarSystem src/main.cpp
         src/NBodySimulation/Octree.h
         src/NBodySimulation/BarnesHut.cpp
         src/NBodySimulation/BarnesHut.h
-        src/Renderer/raygui.h
 )
 
 link_directories(/usr/local/lib)
