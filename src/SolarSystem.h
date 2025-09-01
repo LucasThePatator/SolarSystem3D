@@ -7,6 +7,7 @@
 
 #include <raylib.h>
 #include <toml++/toml.hpp>
+#include <lua.hpp>
 
 #include <filesystem>
 #include <optional>
@@ -41,6 +42,7 @@ namespace SS3D
 
         std::filesystem::path resourcePath;
         void setSystem(const toml::table& tbl);
+        void setSystem(const std::filesystem::path& luaFile);
 
         void makeMaterial(const std::string& bodyName, Material& material, const std::string& shaderName) const;
     };

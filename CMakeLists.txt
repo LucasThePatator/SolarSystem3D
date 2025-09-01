@@ -51,6 +51,8 @@ add_executable(3DSolarSystem src/main.cpp
         src/NBodySimulation/Octree.h
         src/NBodySimulation/BarnesHut.cpp
         src/NBodySimulation/BarnesHut.h
+        src/Renderer/raygui.h
 )
 
-target_link_libraries(3DSolarSystem PUBLIC raylib)
+link_directories(/usr/local/lib)
+target_link_libraries(3DSolarSystem PUBLIC raylib lua)

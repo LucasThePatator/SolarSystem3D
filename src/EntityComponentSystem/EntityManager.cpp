@@ -16,22 +16,23 @@ namespace SS3D
         }
     }
 
-    Entity EntityManager::createEntity(const std::optional<std::string>& name)
+    Entity EntityManager::createEntity(const std::string& name, const std::string& tag)
     {
         if (availableEntities.empty())
             throw std::runtime_error("No available entities");
 
-        if (name.has_value() && namesToEntity.contains(*name))
+        if (namesToEntity.contains(name))
         {
-            const auto &existingEntityId = getEntityByName(*name);
+            const auto& existingEntityId = getEntityByName(name);
             throw std::runtime_error("Entity already exists with that name");
         }
 
         const auto entity = availableEntities.front();
-        if (name.has_value())
-        {
-            namesToEntity[*name] = entity;
-        }
+        namesToEntity[name] = entity;
+        entityToNames[entity] = name;
+
+        tagToEntities[tag].push_back(entity);
+        entityToTag[entity] = tag;
 
         availableEntities.pop();
         return entity;
@@ -41,6 +42,18 @@ namespace SS3D
     {
         if (entity > MAX_ENTITIES)
             throw std::runtime_error("Entity out of range");
+
+        //Clean up the names and tag vectors
+        const auto& entityName = entityToNames.at(entity);
+        namesToEntity.erase(entityName);
+        entityToNames.erase(entity);
+
+        const auto& entityTag = entityToTag.at(entity);
+        auto& taggedEntities = tagToEntities.at(entityTag);
+        taggedEntities.erase(std::ranges::find(taggedEntities, entity));
+        if (taggedEntities.empty())
+            tagToEntities.erase(entityTag);
+        entityToTag.erase(entity);
 
         availableEntities.push(entity);
         signatures.at(entity).reset();
@@ -70,6 +83,14 @@ namespace SS3D
     {
         if (namesToEntity.contains(name))
             return namesToEntity.at(name);
+
+        return std::nullopt;
+    }
+
+    [[nodiscard]] std::optional<std::vector<Entity>> EntityManager::getEntitiesByTag(const std::string& tag)
+    {
+        if (tagToEntities.contains(tag))
+            return std::optional<std::vector<Entity>>{namesToEntity.at(tag)};
 
         return std::nullopt;
     }

@@ -20,6 +20,7 @@ namespace SS3D
 
         float theta = 0.1;
         float G = 6.6743e-11; //Gravitational constant
+        float scale = 1.f;
     };
 } // SS3D
 

@@ -44,6 +44,8 @@ namespace SS3D
                             const Quaternion& rotation,
                             float scale) const;
 
+            void renderGui();
+
             const Shader& getShader(const std::string& shader_name) const { return shaders.at(shader_name); }
 
             ::Camera camera{};

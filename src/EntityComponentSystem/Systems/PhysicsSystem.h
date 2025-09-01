@@ -16,7 +16,7 @@ namespace SS3D
     class PhysicsSystem : public System
     {
     public:
-        explicit PhysicsSystem(float theta, float G);
+        explicit PhysicsSystem(float theta, float G, float scale);
 
         void initialize() override;
         void update(float dt) override;

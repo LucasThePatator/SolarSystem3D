@@ -14,5 +14,6 @@ namespace SS3D
         componentsRegister->setEntityManager(entityManager);
 
         systemRegister->setComponentsRegister(componentsRegister);
+        systemRegister->setEntityManager(entityManager);
     }
 } // SS3D

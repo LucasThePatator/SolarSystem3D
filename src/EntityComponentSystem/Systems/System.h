@@ -13,9 +13,11 @@
 namespace SS3D
 {
     class ComponentsRegister;
+    class EntityManager;
 
     class System
     {
+
     public:
         System() = default;
         virtual ~System() = default;
@@ -29,12 +31,18 @@ namespace SS3D
             componentsRegister = reg;
         }
 
+        void setEntityManager(const std::shared_ptr<EntityManager>& manager)
+        {
+            entityManager = manager;
+        }
+
         void registerEntity(Entity entity);
         void unregisterEntity(Entity entity);
         bool isEntityRegistered(Entity entity);
 
     protected:
         std::shared_ptr<ComponentsRegister> componentsRegister{};
+        std::shared_ptr<EntityManager> entityManager{};
         std::vector<Entity> entities{};
     };
 }

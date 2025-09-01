@@ -22,12 +22,15 @@ namespace SS3D
     public:
         EntityManager();
 
-        Entity createEntity(const std::optional<std::string>& name = std::nullopt);
+        Entity createEntity(const std::string& name,
+                            const std::string& tag);
+
         void destroyEntity(Entity entity);
         void setSignature(Entity entity, Signature signature);
 
         [[nodiscard]] Signature getSignature(Entity entity) const;
-        std::optional<Entity> getEntityByName(const std::string &name);
+        std::optional<Entity> getEntityByName(const std::string& name);
+        std::optional<std::vector<Entity>> getEntitiesByTag(const std::string& tag);
 
         void setSystemRegister(const std::shared_ptr<SystemRegister>&);
         void setComponentRegister(const std::shared_ptr<ComponentsRegister>&);
@@ -36,6 +39,10 @@ namespace SS3D
         std::queue<Entity> availableEntities{};
         std::array<Signature, MAX_ENTITIES> signatures{};
         std::unordered_map<std::string, Entity> namesToEntity{};
+        std::unordered_map<Entity, std::string> entityToNames{};
+
+        std::unordered_map<std::string, std::vector<Entity>> tagToEntities{};
+        std::unordered_map<Entity, std::string> entityToTag{};
 
         std::shared_ptr<SystemRegister> systemRegister{};
         std::shared_ptr<ComponentsRegister> componentsRegister{};

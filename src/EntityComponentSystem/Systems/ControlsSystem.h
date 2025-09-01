@@ -23,7 +23,6 @@ namespace SS3D
         void update(float dt) override;
         void render() override {};
 
-
         std::shared_ptr<SS3D::Renderer::Renderer> renderer;
     };
 } // SS3D

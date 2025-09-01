@@ -4,11 +4,10 @@
 
 #include "Renderer.h"
 
-#include <ranges>
 #include <raymath.h>
 #include <spdlog/spdlog.h>
+#include "raygui.h"
 
-#include "src/EntityComponentSystem/Components/Graphics.h"
 #include "src/EntityComponentSystem/Components/Light.h"
 #define GLSL_VERSION 420
 
@@ -146,6 +145,10 @@ namespace SS3D::Renderer
         const auto matrix = makeTransformationMatrix(position, rotation, scale);
         DrawMesh(mesh, material, matrix);
 
+    }
+
+    void Renderer::renderGui()
+    {
     }
 }
 

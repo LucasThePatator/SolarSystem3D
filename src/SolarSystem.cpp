@@ -4,6 +4,12 @@
 
 #include <spdlog/spdlog.h>
 
+extern "C" {
+#include <lualib.h>
+#include <lauxlib.h>
+}
+
+
 #include "SolarSystem.h"
 #include "EntityComponentSystem/Components/Components.h"
 #include "EntityComponentSystem/Systems/RenderingSystem.h"
@@ -36,8 +42,8 @@ namespace SS3D
         auto lightingSystem = ecs.systemRegister->registerSystem<LightingSystem>(Signature("00001001"), renderer);
         auto motionSystem = ecs.systemRegister->registerSystem<MovementSystem>(Signature("00000011"));
         auto controlsSystem = ecs.systemRegister->registerSystem<ControlsSystem>(Signature("00100001"), renderer);
-        auto physicsSystem = ecs.systemRegister->registerSystem<
-            PhysicsSystem>(Signature("00010011"), 0.1f, 6.67259e-29);
+        auto physicsSystem = ecs.systemRegister->registerSystem<PhysicsSystem>(
+            Signature("00010011"), 0.1f, 6.67259e-29, modelScale);
 
         renderingSystem->initialize();
         lightingSystem->initialize();
@@ -45,7 +51,7 @@ namespace SS3D
         motionSystem->initialize();
         controlsSystem->initialize();
 
-        const auto cameraEntity = entityManager->createEntity();
+        const auto cameraEntity = entityManager->createEntity("camera", "camera");
         componentsRegister->addComponent<Transform>(cameraEntity, SS3D::Transform{
                                                         .position = Vector3(0.0f, 0.0f, 0.0f),
                                                     });
@@ -124,6 +130,14 @@ namespace SS3D
         });
     }
 
+    void SolarSystem::setSystem(const std::filesystem::path& luaFile)
+    {
+        lua_State* L = luaL_newstate();
+        luaL_openlibs(L);
+        luaopen_math(L);
+        luaopen_string(L);
+    }
+
     Entity SolarSystem::createBody(const std::string& name, const float mass, const float radius,
                                    const Vector3& position,
                                    const Quaternion& attitude,
@@ -131,7 +145,7 @@ namespace SS3D
                                    const std::optional<ComponentInstance> refBody,
                                    const std::string& shaderName)
     {
-        const auto bodyEntity = entityManager->createEntity(name);
+        const auto bodyEntity = entityManager->createEntity(name, "body");
         bodies[name] = bodyEntity;
 
         componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{

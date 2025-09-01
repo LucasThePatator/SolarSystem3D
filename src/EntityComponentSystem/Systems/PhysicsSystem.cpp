@@ -11,8 +11,8 @@
 
 namespace SS3D
 {
-    PhysicsSystem::PhysicsSystem(const float theta, const float G) :
-        barnesHut{.theta = theta, .G = G}
+    PhysicsSystem::PhysicsSystem(const float theta, const float G, const float scale) :
+        barnesHut{.theta = theta, .G = G, .scale = scale}
     {
     }
 
@@ -20,7 +20,7 @@ namespace SS3D
     {
     }
 
-    void PhysicsSystem::update(float dt)
+    void PhysicsSystem::update(const float dt)
     {
         std::vector<Vector3> positions;
         std::vector<float> masses;

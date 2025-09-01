@@ -14,6 +14,7 @@ namespace SS3D
 {
     class System;
     class ComponentsRegister;
+    class EntityManager;
 
     class SystemRegister
     {
@@ -35,6 +36,7 @@ namespace SS3D
             signatures[systemName] = signature;
 
             system->setComponentsRegister(componentsRegister);
+            system->setEntityManager(entityManager);
 
             return system;
         }
@@ -51,6 +53,11 @@ namespace SS3D
             componentsRegister = reg;
         }
 
+        void setEntityManager(const std::shared_ptr<EntityManager> &man)
+        {
+            entityManager = man;
+        }
+
         void onEntitySignatureChanged(Entity entity, Signature entitySignature);
         void onEntityDestroyed(Entity entity);
 
@@ -59,6 +66,7 @@ namespace SS3D
         std::unordered_map<const char*, Signature> signatures{};
 
         std::shared_ptr<ComponentsRegister> componentsRegister{};
+        std::shared_ptr<EntityManager> entityManager{};
     };
 } // SS3D
 
