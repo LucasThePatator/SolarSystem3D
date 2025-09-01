@@ -58,6 +58,8 @@ namespace SS3D
             entityManager = man;
         }
 
+        const std::unordered_map<const char*, std::shared_ptr<System>>& getSystems(const Signature signature);
+
         void onEntitySignatureChanged(Entity entity, Signature entitySignature);
         void onEntityDestroyed(Entity entity);
 

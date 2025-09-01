@@ -29,7 +29,7 @@ namespace SS3D
 
     void RenderingSystem::render()
     {
-        renderer->startRender();
+        BeginMode3D(renderer->camera); //TODO très bof
         for (const auto& entity : entities)
         {
             const auto& graphic = componentsRegister->getComponent<Graphics>(entity);
@@ -40,6 +40,16 @@ namespace SS3D
                                      scale);
             }
         }
+        EndMode3D();
+    }
+
+    void RenderingSystem::beforeRender()
+    {
+        renderer->startRender();
+    }
+
+    void RenderingSystem::afterRender()
+    {
         renderer->endRender();
     }
 }

@@ -24,6 +24,14 @@ namespace SS3D
 
         virtual void initialize() = 0;
         virtual void update(float dt) = 0;
+
+        virtual void beforeRender()
+        {
+        };
+
+        virtual void afterRender()
+        {
+        };
         virtual void render() = 0;
 
         void setComponentsRegister(const std::shared_ptr<ComponentsRegister>& reg)

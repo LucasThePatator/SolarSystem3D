@@ -90,9 +90,19 @@ namespace SS3D
     [[nodiscard]] std::optional<std::vector<Entity>> EntityManager::getEntitiesByTag(const std::string& tag)
     {
         if (tagToEntities.contains(tag))
-            return std::optional<std::vector<Entity>>{namesToEntity.at(tag)};
+            return std::optional<std::vector<Entity>>{tagToEntities.at(tag)};
 
         return std::nullopt;
+    }
+
+    const std::string& EntityManager::getEntityName(const Entity entity) const
+    {
+        return entityToNames.at(entity);
+    }
+
+    const std::string& EntityManager::getEntityTag(const Entity entity) const
+    {
+        return entityToTag.at(entity);
     }
 
     void EntityManager::setSystemRegister(const std::shared_ptr<SystemRegister>& sr)

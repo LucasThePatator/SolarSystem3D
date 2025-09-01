@@ -7,6 +7,8 @@
 
 #include "System.h"
 
+#include <raylib.h>
+
 namespace SS3D
 {
     namespace Renderer
@@ -28,7 +30,11 @@ namespace SS3D
     private:
         void renderGui();
 
-        //Vector3 currentTarget{};
+        //Gui status
+        int bodyIndex{0};
+        bool checked{false};
+
+        Vector3 currentTarget{};
     };
 } // SS3D
 

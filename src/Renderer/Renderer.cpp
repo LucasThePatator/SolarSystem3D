@@ -119,13 +119,11 @@ namespace SS3D::Renderer
     {
         BeginDrawing();
         ClearBackground(BLACK);
-        BeginMode3D(camera);
         inRender = true;
     }
 
     void Renderer::endRender()
     {
-        EndMode3D();
         EndDrawing();
         inRender = false;
     }

@@ -31,6 +31,8 @@ namespace SS3D
         [[nodiscard]] Signature getSignature(Entity entity) const;
         std::optional<Entity> getEntityByName(const std::string& name);
         std::optional<std::vector<Entity>> getEntitiesByTag(const std::string& tag);
+        const std::string& getEntityName(Entity entity) const;
+        const std::string& getEntityTag(Entity entity) const;
 
         void setSystemRegister(const std::shared_ptr<SystemRegister>&);
         void setComponentRegister(const std::shared_ptr<ComponentsRegister>&);

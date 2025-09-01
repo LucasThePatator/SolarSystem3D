@@ -9,15 +9,15 @@
 #include "src/EntityComponentSystem/Components/Transform.h"
 #include "src/Renderer/Renderer.h"
 
-//#define RAYGUI_IMPLEMENTATION
-//#include "src/Renderer/raygui.h"
+#define RAYGUI_IMPLEMENTATION
+#include "src/Renderer/raygui.h"
 
 namespace SS3D
 {
     struct Transform;
 
     ControlsSystem::ControlsSystem(const std::shared_ptr<SS3D::Renderer::Renderer>& renderer) :
-    renderer(renderer)
+        renderer(renderer)
     {
     }
 
@@ -72,7 +72,7 @@ namespace SS3D
         if (IsKeyPressed(KEY_R))
         {
             transform.position = Vector3{100.f, 10.f, 0.f};
-            target = {0.0f, 0.0f, 0.0f};
+            target = currentTarget;
             spdlog::info("Position reset");
         }
 
@@ -88,6 +88,27 @@ namespace SS3D
 
     void ControlsSystem::renderGui()
     {
-        //GuiButton({0, 0, 20, 20}, "Button");
+        const auto& bodyEntities = entityManager->getEntitiesByTag("body");
+        std::vector<std::string> bodyNames;
+        std::string bodyNamesString{};
+
+        for (const auto& entity : *bodyEntities)
+        {
+            const std::string& bodyName = entityManager->getEntityName(entity);
+            bodyNamesString += bodyName + ";";
+            bodyNames.push_back(bodyName);
+        }
+        bodyNamesString.resize(!bodyNamesString.empty() ? bodyNamesString.size() - 1 : 0);
+        GuiLabel(Rectangle{10, 10, 60, 24}, "Target body:");
+        GuiDropdownBox(Rectangle{80, 10, 120, 24}, bodyNamesString.c_str(), &bodyIndex, true);
+
+        if (!bodyNames.empty())
+        {
+            const auto& targetEntityName = bodyNames[bodyIndex];
+            const auto& targetEntity = entityManager->getEntityByName(targetEntityName);
+            const auto& targetEntityTransform = componentsRegister->getComponent<Transform>(*targetEntity);
+
+            currentTarget = targetEntityTransform.position;
+        }
     }
 } // SS3D

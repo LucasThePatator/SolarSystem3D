@@ -192,11 +192,14 @@ namespace SS3D
 
     void SolarSystem::render()
     {
+        //TODO Clean that up in the systems
+        ecs.systemRegister->getSystem<RenderingSystem>()->beforeRender();
         ecs.systemRegister->getSystem<ControlsSystem>()->render();
         ecs.systemRegister->getSystem<PhysicsSystem>()->render();
         ecs.systemRegister->getSystem<RenderingSystem>()->render();
         ecs.systemRegister->getSystem<LightingSystem>()->render();
         ecs.systemRegister->getSystem<MovementSystem>()->render();
+        ecs.systemRegister->getSystem<RenderingSystem>()->afterRender();
     }
 
     void SolarSystem::makeMaterial(const std::string& bodyName, Material& material, const std::string& shaderName) const

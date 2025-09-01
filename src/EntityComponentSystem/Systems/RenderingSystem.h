@@ -22,6 +22,8 @@ namespace SS3D
         void initialize() override;
         void update(float dt) override;
         void render() override;
+        void beforeRender() override;
+        void afterRender() override;
 
         std::shared_ptr<SS3D::Renderer::Renderer> renderer;
 

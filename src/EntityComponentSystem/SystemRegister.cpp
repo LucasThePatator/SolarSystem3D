@@ -8,6 +8,12 @@
 
 namespace SS3D
 {
+    const std::unordered_map<const char*, std::shared_ptr<System>>& SystemRegister::getSystems(
+        const Signature signature)
+    {
+        return systems;
+    }
+
     void SystemRegister::onEntitySignatureChanged(const Entity entity, const Signature entitySignature)
     {
         for (const auto& [systemName, system] : systems)
