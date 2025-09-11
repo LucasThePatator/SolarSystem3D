@@ -14,19 +14,7 @@ int main(int argc, char* argv[])
     EntityComponentSystem ecs;
     SolarSystem solarSystem(ecs, std::filesystem::path(argv[1]));
 
-    double lastPrintTime = 0.;
-    while (!WindowShouldClose())
-    {
-        solarSystem.update(0.0166);
-        solarSystem.render();
-
-        if (const auto elapsedTime = GetTime(); elapsedTime - lastPrintTime >= 3.f)
-        {
-            auto FPS = GetFPS();
-            spdlog::debug("FPS: {0}", FPS);
-            lastPrintTime = elapsedTime;
-        }
-    }
+    solarSystem.run();
 
     return 0;
 }

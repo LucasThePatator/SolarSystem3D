@@ -84,7 +84,15 @@ namespace SS3D
         }
 
         template <typename ComponentType>
-        void updateSignature(const Entity entity, const bool value)
+        std::shared_ptr<const ComponentCollection<const ComponentType>> getComponentCollection() const
+        {
+            const auto* componentName = typeid(ComponentType).name();
+            const auto abstractCollection = componentCollections.at(componentName);
+            return std::static_pointer_cast<const ComponentCollection<const ComponentType>>(abstractCollection);
+        }
+
+        template <typename ComponentType>
+        void updateSignature(const Entity entity, const bool value) const
         {
             auto entitySignature = entityManager->getSignature(entity);
             const auto sigIndex = componentTypes.at(typeid(ComponentType).name());

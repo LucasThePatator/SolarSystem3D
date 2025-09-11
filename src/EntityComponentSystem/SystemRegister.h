@@ -48,12 +48,19 @@ namespace SS3D
             return std::static_pointer_cast<SystemType>(systems.at(systemName));
         }
 
+        template <typename SystemType>
+        std::shared_ptr<const SystemType> getSystem() const
+        {
+            const auto systemName = typeid(SystemType).name();
+            return std::static_pointer_cast<SystemType>(systems.at(systemName));
+        }
+
         void setComponentsRegister(const std::shared_ptr<ComponentsRegister>& reg)
         {
             componentsRegister = reg;
         }
 
-        void setEntityManager(const std::shared_ptr<EntityManager> &man)
+        void setEntityManager(const std::shared_ptr<EntityManager>& man)
         {
             entityManager = man;
         }

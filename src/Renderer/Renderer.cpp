@@ -22,7 +22,7 @@ namespace SS3D::Renderer
 
     void Renderer::initialize(const std::filesystem::path& shadersPath)
     {
-        SetConfigFlags(FLAG_MSAA_4X_HINT);
+        SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
         InitWindow(width, height, "SolarSystem 3D");
 
         SetTargetFPS(60); // Set our game to run at 60 frames-per-second

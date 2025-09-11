@@ -38,7 +38,7 @@ namespace SS3D
         ecs.componentsRegister->registerComponentType<Camera>();
 
 
-        const auto renderer = std::make_shared<Renderer::Renderer>(1024, 768);
+        const auto renderer = std::make_shared<Renderer::Renderer>(1920, 1080);
         renderer->initialize(*resourcesTbl.at("shaderPath").value<std::string>());
         auto renderingSystem = ecs.systemRegister->registerSystem<RenderingSystem>(Signature("00000101"), renderer);
         auto lightingSystem = ecs.systemRegister->registerSystem<LightingSystem>(Signature("00001001"), renderer);
@@ -94,6 +94,11 @@ namespace SS3D
                 auto* positionPtr = reinterpret_cast<float*>(&position);
                 fillRaylibType(positionArray, positionPtr);
 
+                const auto velocityArray = entry["velocity"].as_array();
+                Vector3 velocity{};
+                auto* velocityPtr = reinterpret_cast<float*>(&velocity);
+                fillRaylibType(velocityArray, velocityPtr);
+
                 const auto attitudeArray = entry["attitude"].as_array();
                 Quaternion attitude{};
                 auto* attitudePtr = reinterpret_cast<float*>(&attitude);
@@ -116,7 +121,8 @@ namespace SS3D
                 }*/
 
                 const auto shaderName = entry["shaderName"].template value_or<std::string>("planet");
-                const auto currentEntity = createBody(name, mass, radius * scale, position, attitude, rotationSpeed,
+                const auto currentEntity = createBody(name, mass, radius * scale, position, velocity, attitude,
+                                                      rotationSpeed,
                                                       std::nullopt, shaderName);
 
                 if (name == "Sun")
@@ -138,10 +144,12 @@ namespace SS3D
         luaL_openlibs(L);
         luaopen_math(L);
         luaopen_string(L);
+        lua_close(L);
     }
 
     Entity SolarSystem::createBody(const std::string& name, const float mass, const float radius,
                                    const Vector3& position,
+                                   const Vector3& speed,
                                    const Quaternion& attitude,
                                    const Vector3& rotationSpeed,
                                    const std::optional<ComponentInstance> refBody,
@@ -157,7 +165,7 @@ namespace SS3D
                                                     });
 
         componentsRegister->addComponent<Motion>(bodyEntity, SS3D::Motion{
-                                                     .velocity = Vector3{},
+                                                     .velocity = speed * modelScale,
                                                      .rotationSpeed = rotationSpeed,
                                                  });
 
@@ -200,6 +208,23 @@ namespace SS3D
         ecs.systemRegister->getSystem<LightingSystem>()->render();
         ecs.systemRegister->getSystem<MovementSystem>()->render();
         ecs.systemRegister->getSystem<RenderingSystem>()->afterRender();
+    }
+
+    void SolarSystem::run()
+    {
+        double lastTime = GetTime();
+        float speedUp = 1.f;
+
+        const auto controlSystem = ecs.systemRegister->getSystem<ControlsSystem>();
+        controlSystem->parameterPointers["speedUp"] = static_cast<void*>(&speedUp);
+        while (!WindowShouldClose())
+        {
+            const double newTime = GetTime();
+            const auto deltaTime = 1.f / 60; //static_cast<float>(newTime - lastTime);
+            update(static_cast<float>(deltaTime * std::pow(10, speedUp)));
+            lastTime = newTime;
+            render();
+        }
     }
 
     void SolarSystem::makeMaterial(const std::string& bodyName, Material& material, const std::string& shaderName) const

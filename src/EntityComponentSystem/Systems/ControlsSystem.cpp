@@ -100,7 +100,9 @@ namespace SS3D
         }
         bodyNamesString.resize(!bodyNamesString.empty() ? bodyNamesString.size() - 1 : 0);
         GuiLabel(Rectangle{10, 10, 60, 24}, "Target body:");
-        GuiDropdownBox(Rectangle{80, 10, 120, 24}, bodyNamesString.c_str(), &bodyIndex, true);
+        static bool bodySelectorEditMode = false;
+        if (GuiDropdownBox(Rectangle{80, 10, 120, 24}, bodyNamesString.c_str(), &bodyIndex, bodySelectorEditMode))
+            bodySelectorEditMode = !bodySelectorEditMode;
 
         if (!bodyNames.empty())
         {
@@ -110,5 +112,9 @@ namespace SS3D
 
             currentTarget = targetEntityTransform.position;
         }
+
+        auto* const speedUp = static_cast<float*>(parameterPointers.at("speedUp"));
+        GuiSlider(Rectangle{12, 44, 120, 24}, "Speed up", std::format("x{:0.1f}", *speedUp).c_str(), speedUp, 1,
+                  6);
     }
 } // SS3D

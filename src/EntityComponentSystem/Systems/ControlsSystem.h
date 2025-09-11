@@ -8,6 +8,7 @@
 #include "System.h"
 
 #include <raylib.h>
+#include <unordered_map>
 
 namespace SS3D
 {
@@ -26,6 +27,7 @@ namespace SS3D
         void render() override;
 
         std::shared_ptr<SS3D::Renderer::Renderer> renderer;
+        std::unordered_map<std::string, void*> parameterPointers;
 
     private:
         void renderGui();
