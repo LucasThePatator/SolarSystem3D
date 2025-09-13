@@ -54,7 +54,7 @@ namespace SS3D
                         nodeQueue.push_back(child);
                 }
             }
-            currentBodyAcceleration = Vector3Scale(currentBodyAcceleration, G * scale);
+            currentBodyAcceleration = Vector3Scale(currentBodyAcceleration, G);
         }
     }
 } // SS3D

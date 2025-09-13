@@ -17,6 +17,7 @@ namespace SS3D
     PhysicsSystem::PhysicsSystem(const float theta, const float G, const float scale) :
         barnesHut{.theta = theta, .G = G, .scale = scale}
     {
+        barnesHut.G *= scale*scale*scale;
     }
 
     void PhysicsSystem::initialize()

@@ -17,7 +17,7 @@ extern "C" {
 #include "Renderer/Renderer.h"
 
 
-constexpr float modelScale = 1.f / 1000000;
+constexpr float modelScale = 1.f / 1000000000; // Base is meters
 
 namespace SS3D
 {
@@ -45,7 +45,7 @@ namespace SS3D
         auto motionSystem = ecs.systemRegister->registerSystem<MovementSystem>(Signature("00000011"));
         auto controlsSystem = ecs.systemRegister->registerSystem<ControlsSystem>(Signature("00100001"), renderer);
         auto physicsSystem = ecs.systemRegister->registerSystem<PhysicsSystem>(
-            Signature("00010011"), 0.1f, 6.67259e-29, modelScale);
+            Signature("00010011"), 0.1f, 6.67259e-11, modelScale);
 
         renderingSystem->initialize();
         lightingSystem->initialize();
