@@ -44,6 +44,8 @@ namespace SS3D::Renderer
                         float scale) const;
 
         const Shader& getShader(const std::string& shader_name) const { return shaders.at(shader_name); }
+        void setupSkybox(const std::filesystem::path& skyboxImagePath);
+        void renderSkybox();
 
         ::Camera camera{};
 
@@ -52,8 +54,10 @@ namespace SS3D::Renderer
         std::unordered_map<std::string, std::array<LightShaderInformation, MAX_LIGHTS>> lightsShaderInformation;
         std::unordered_map<std::string, Shader> shaders;
 
-        int width, height;
+        Mesh skyboxCube;
+        Model skybox;
 
+        int width, height;
         bool inRender{false};
 
         void setupLightShaderInformation();

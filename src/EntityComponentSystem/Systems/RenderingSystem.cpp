@@ -30,6 +30,7 @@ namespace SS3D
     void RenderingSystem::render()
     {
         BeginMode3D(renderer->camera); //TODO très bof
+        renderer->renderSkybox();
         for (const auto& entity : entities)
         {
             const auto& graphic = componentsRegister->getComponent<Graphics>(entity);

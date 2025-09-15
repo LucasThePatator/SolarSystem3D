@@ -40,6 +40,8 @@ namespace SS3D
 
         const auto renderer = std::make_shared<Renderer::Renderer>(1920, 1080);
         renderer->initialize(*resourcesTbl.at("shaderPath").value<std::string>());
+        const auto skyboxTbl = *configurationTbl.at("skybox").as_table();
+        renderer->setupSkybox(resourcePath / *skyboxTbl.at("textureName").value<std::string>());
         auto renderingSystem = ecs.systemRegister->registerSystem<RenderingSystem>(Signature("00000101"), renderer);
         auto lightingSystem = ecs.systemRegister->registerSystem<LightingSystem>(Signature("00001001"), renderer);
         auto motionSystem = ecs.systemRegister->registerSystem<MovementSystem>(Signature("00000011"));
@@ -202,9 +204,9 @@ namespace SS3D
     {
         //TODO Clean that up in the systems
         ecs.systemRegister->getSystem<RenderingSystem>()->beforeRender();
-        ecs.systemRegister->getSystem<ControlsSystem>()->render();
         ecs.systemRegister->getSystem<PhysicsSystem>()->render();
         ecs.systemRegister->getSystem<RenderingSystem>()->render();
+        ecs.systemRegister->getSystem<ControlsSystem>()->render();
         ecs.systemRegister->getSystem<LightingSystem>()->render();
         ecs.systemRegister->getSystem<MovementSystem>()->render();
         ecs.systemRegister->getSystem<RenderingSystem>()->afterRender();
