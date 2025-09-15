@@ -11,8 +11,9 @@ uniform sampler2D diffuseMap; //Diffuse
 uniform sampler2D specularMap; //Specular
 uniform sampler2D normalMap; //normal
 uniform sampler2D nightEmissionMap; //diffuse night
-
 uniform vec4 colDiffuse;
+
+uniform float roughness;
 
 // Output fragment color
 out vec4 finalColor;
@@ -22,6 +23,7 @@ out vec4 finalColor;
 #define     MAX_LIGHTS              4
 #define     LIGHT_DIRECTIONAL       0
 #define     LIGHT_POINT             1
+#define     M_PI 3.1415926535897932384626433832795
 
 struct Light {
     int enabled;
@@ -45,6 +47,7 @@ void main()
     vec3 viewD = normalize(viewPos - fragPosition);
     vec3 specular = vec3(0.0);
     vec4 specularTexelColor = texture(specularMap, fragTexCoord);
+    vec3 n = 1.33 * specularTexelColor.rgb;
 
     vec4 tint = colDiffuse * fragColor;
 
@@ -64,18 +67,30 @@ void main()
                 light = normalize(lights[i].position - fragPosition);
             }
 
+            vec3 H = normalize(viewD + light);
+
             float NdotL = dot(normal, light);
+            float HdotN = dot(H, normal);
+            float NdotV = dot(normal, viewD);
+            float VdotH = dot(viewD, H);
+
             if(NdotL > 0.01)
             {
                 vec3 lightDot = lights[i].color.rgb*NdotL;
-                finalColor += texelColor * tint * vec4(lightDot, 1);
 
-                float specCo = 0.0;
-                if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 4.0); // 16 refers to shine
-                finalColor += specCo * specularTexelColor;
+                float alphaSquared = roughness * roughness;
+                float D = pow(HdotN, (2 / alphaSquared) - 2) / (M_PI * alphaSquared);
+                float G = min(1.0, min(2 * HdotN * NdotV / VdotH, 2 * HdotN * NdotL / VdotH));
+                vec3 F0 = pow(n - 1, vec3(2)) / pow(n + 1, vec3(2));
+                vec3 F = F0 + (1 - F0) * pow(1 - VdotH, 5);
+
+                vec3 rs = D * G * F / (4 * NdotL * NdotV);
+                //finalColor += vec4(F,1);
+                finalColor += vec4(lightDot * tint.rgb * texelColor.rgb * ((1 - specularTexelColor.rgb) + 10 * specularTexelColor.rgb * rs), 1);
+
             } else
             {
-                finalColor += 0.07*texelNight;
+                finalColor += NdotV * 0.04 * texelNight * (1 - specularTexelColor.r);
             }
         }
     }

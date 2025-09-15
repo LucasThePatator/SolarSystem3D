@@ -37,6 +37,7 @@ namespace SS3D::Renderer
         void initialize(const std::filesystem::path& shadersPath);
         void updateLight(LightHandle id, const Vector3& position, const Vector3& target, const Color& color,
                          bool enabled = true);
+        void setTime(float dt);
         void startRender();
         void endRender();
         void renderMesh(const Mesh& mesh, const Material& material, const Vector3& position,
@@ -57,6 +58,7 @@ namespace SS3D::Renderer
         Mesh skyboxCube;
         Model skybox;
 
+        float currentRenderTime{0};
         int width, height;
         bool inRender{false};
 

@@ -9,14 +9,18 @@ in vec3 fragNormal;
 // Input uniform values
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
+uniform float time;
 
 // Output fragment color
 out vec4 finalColor;
 
+float pi = 3.141592;
+float period = 12;
 void main()
 {
     // Texel color fetching from texture sampler
     vec4 texelColor = texture(texture0, fragTexCoord);
-    finalColor = colDiffuse * texelColor + fragColor;
-    finalColor = pow(texelColor, vec4(1.0/2.2));
+    vec3 rgb = texelColor.rgb * (1 + 0.2 * cos(2 * pi * time * texelColor.r / period));
+    finalColor = vec4(rgb, 1);
+    finalColor = pow(finalColor, vec4(1.0 / 2.2));
 }

@@ -23,8 +23,9 @@ namespace SS3D
     {
     }
 
-    void RenderingSystem::update(float dt)
+    void RenderingSystem::update(const float dt)
     {
+        renderer->setTime(dt);
     }
 
     void RenderingSystem::render()

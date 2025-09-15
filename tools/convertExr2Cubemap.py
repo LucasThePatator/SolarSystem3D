@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     height, width = RGB.shape[0:2]
     print(f"height={height}; width={width}")
-    gamma = 1
+    gamma = 1.5
     RGB = (np.pow(RGB, 1 / gamma) * 255).astype("uint8")
 
     # You can make conversion between supported cubemap format

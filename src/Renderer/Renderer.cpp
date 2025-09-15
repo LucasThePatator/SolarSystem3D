@@ -39,13 +39,18 @@ namespace SS3D::Renderer
                 const Shader shader = LoadShader(vertexShaderPath.string().c_str(),
                                                  fragmentShaderPath.string().c_str());
 
-                shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
                 shaders[fragmentShaderPath.stem().string()] = shader;
 
-                shader.locs[SHADER_LOC_MAP_DIFFUSE] = GetShaderLocation(shader, "diffuseMap");  // Choose any name you use on the shader for texture used as diffuse
-                shader.locs[SHADER_LOC_MAP_SPECULAR] = GetShaderLocation(shader, "specularMap"); // Choose any name you use on the shader for texture used as specular/metalness
-                shader.locs[SHADER_LOC_MAP_NORMAL] = GetShaderLocation(shader, "normalMap");   // Choose any name you use on the shader for texture used as normal
-                shader.locs[SHADER_LOC_MAP_EMISSION] = GetShaderLocation(shader, "nightEmissionMap");   // Choose any name you use on the shader for texture used as normal
+                shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
+
+                shader.locs[SHADER_LOC_MAP_DIFFUSE] = GetShaderLocation(shader, "diffuseMap");
+                // Choose any name you use on the shader for texture used as diffuse
+                shader.locs[SHADER_LOC_MAP_SPECULAR] = GetShaderLocation(shader, "specularMap");
+                // Choose any name you use on the shader for texture used as specular/metalness
+                shader.locs[SHADER_LOC_MAP_NORMAL] = GetShaderLocation(shader, "normalMap");
+                // Choose any name you use on the shader for texture used as normal
+                shader.locs[SHADER_LOC_MAP_EMISSION] = GetShaderLocation(shader, "nightEmissionMap");
+                // Choose any name you use on the shader for texture used as normal
                 shader.locs[SHADER_LOC_MAP_CUBEMAP] = GetShaderLocation(shader, "cubeMap");
                 // Choose any name you use on the shader for texture used as diffuse
             }
@@ -140,6 +145,11 @@ namespace SS3D::Renderer
         }
     }
 
+    void Renderer::setTime(const float dt)
+    {
+        currentRenderTime += dt;
+    }
+
     void Renderer::startRender()
     {
         BeginDrawing();
@@ -166,9 +176,18 @@ namespace SS3D::Renderer
             throw std::runtime_error("Material is not valid!");
         }
 
+        SetShaderValue(material.shader, material.shader.locs[SHADER_LOC_VECTOR_VIEW], (void*)&camera.position,
+                       SHADER_UNIFORM_VEC3);
+
+        SetShaderValue(material.shader, GetShaderLocation(material.shader, "time"),
+                       (void*)&currentRenderTime, SHADER_ATTRIB_FLOAT);
+
+        float roughness = 0.5;
+        SetShaderValue(material.shader, GetShaderLocation(material.shader, "roughness"),
+                       (void*)&roughness, SHADER_ATTRIB_FLOAT);
+
         const auto matrix = makeTransformationMatrix(position, rotation, scale);
         DrawMesh(mesh, material, matrix);
-
     }
 }
 
