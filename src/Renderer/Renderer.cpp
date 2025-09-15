@@ -4,6 +4,7 @@
 
 #include "Renderer.h"
 
+#include <rlgl.h>
 #include <raymath.h>
 #include <spdlog/spdlog.h>
 #include "raygui.h"
@@ -45,11 +46,34 @@ namespace SS3D::Renderer
                 shader.locs[SHADER_LOC_MAP_SPECULAR] = GetShaderLocation(shader, "specularMap"); // Choose any name you use on the shader for texture used as specular/metalness
                 shader.locs[SHADER_LOC_MAP_NORMAL] = GetShaderLocation(shader, "normalMap");   // Choose any name you use on the shader for texture used as normal
                 shader.locs[SHADER_LOC_MAP_EMISSION] = GetShaderLocation(shader, "nightEmissionMap");   // Choose any name you use on the shader for texture used as normal
+                shader.locs[SHADER_LOC_MAP_CUBEMAP] = GetShaderLocation(shader, "cubeMap");  // Choose any name you use on the shader for texture used as diffuse
 
             }
         }
 
         setupLightShaderInformation();
+    }
+
+    void Renderer::setupSkybox(const std::filesystem::path& skyboxImagePath)
+    {
+        skyboxCube= GenMeshCube(1.0f, 1.0f, 1.0f);
+        skybox = LoadModelFromMesh(skyboxCube);
+
+        skybox.materials[0].shader = shaders.at("skybox");
+
+        const Image skyboxImg = LoadImage(skyboxImagePath.c_str());
+        skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = LoadTextureCubemap(skyboxImg, CUBEMAP_LAYOUT_AUTO_DETECT);
+        UnloadImage(skyboxImg);
+    }
+
+    void Renderer::renderSkybox()
+    {
+        // We are inside the cube, we need to disable backface culling!
+        rlDisableBackfaceCulling();
+        rlDisableDepthMask();
+        DrawModel(skybox, (Vector3){0, 0, 0}, 1.0f, WHITE);
+        rlEnableBackfaceCulling();
+        rlEnableDepthMask();
     }
 
     void Renderer::setupLightShaderInformation()
