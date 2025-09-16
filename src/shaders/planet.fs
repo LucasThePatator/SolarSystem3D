@@ -5,6 +5,7 @@ in vec3 fragPosition;
 in vec2 fragTexCoord;
 in vec4 fragColor;
 in vec3 fragNormal;
+in mat3 TBN;
 
 // Input uniform values
 uniform sampler2D diffuseMap; //Diffuse
@@ -43,7 +44,12 @@ void main()
     // Texel color fetching from texture sampler
     vec4 texelColor = texture(diffuseMap, fragTexCoord);
     vec4 texelNight = texture(nightEmissionMap, fragTexCoord);
-    vec3 normal = normalize(fragNormal);
+    //vec3 normal = normalize(fragNormal);
+
+    vec3 normal = texture(normalMap, vec2(fragTexCoord.x, fragTexCoord.y)).rgb;
+    normal = normalize(normal * 2.0 - 1.0);
+    normal = normalize(normal * TBN);
+
     vec3 viewD = normalize(viewPos - fragPosition);
     vec3 specular = vec3(0.0);
     vec4 specularTexelColor = texture(specularMap, fragTexCoord);
@@ -86,7 +92,7 @@ void main()
 
                 vec3 rs = D * G * F / (4 * NdotL * NdotV);
                 //finalColor += vec4(F,1);
-                finalColor += vec4(lightDot * tint.rgb * texelColor.rgb * ((1 - specularTexelColor.rgb) + 10 * specularTexelColor.rgb * rs), 1);
+                finalColor += vec4(lightDot * tint.rgb * texelColor.rgb * ((1 - 0.75 * specularTexelColor.rgb) + 0.75 * specularTexelColor.rgb * rs), 1);
 
             } else
             {

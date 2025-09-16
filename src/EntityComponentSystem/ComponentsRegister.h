@@ -67,13 +67,13 @@ namespace SS3D
         void onEntityDestroyed(Entity entity);
         void setEntityManager(const std::shared_ptr<EntityManager>&);
 
-    protected:
-        std::unordered_map<const char*, ComponentTypeID> componentTypes;
-        std::unordered_map<const char*, std::shared_ptr<AbstractComponentCollection>> componentCollections;
-
-        ComponentTypeID nextComponentType{0};
-
-        std::shared_ptr<EntityManager> entityManager{};
+        template <typename ComponentType>
+        std::shared_ptr<const ComponentCollection<const ComponentType>> getComponentCollection() const
+        {
+            const auto* componentName = typeid(ComponentType).name();
+            const auto abstractCollection = componentCollections.at(componentName);
+            return std::static_pointer_cast<const ComponentCollection<const ComponentType>>(abstractCollection);
+        }
 
         template <typename ComponentType>
         std::shared_ptr<ComponentCollection<ComponentType>> getComponentCollection()
@@ -83,13 +83,13 @@ namespace SS3D
             return std::static_pointer_cast<ComponentCollection<ComponentType>>(abstractCollection);
         }
 
-        template <typename ComponentType>
-        std::shared_ptr<const ComponentCollection<const ComponentType>> getComponentCollection() const
-        {
-            const auto* componentName = typeid(ComponentType).name();
-            const auto abstractCollection = componentCollections.at(componentName);
-            return std::static_pointer_cast<const ComponentCollection<const ComponentType>>(abstractCollection);
-        }
+    protected:
+        std::unordered_map<const char*, ComponentTypeID> componentTypes;
+        std::unordered_map<const char*, std::shared_ptr<AbstractComponentCollection>> componentCollections;
+
+        ComponentTypeID nextComponentType{0};
+
+        std::shared_ptr<EntityManager> entityManager{};
 
         template <typename ComponentType>
         void updateSignature(const Entity entity, const bool value) const
