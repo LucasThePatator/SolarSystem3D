@@ -7,17 +7,10 @@
 #include <spdlog/spdlog.h>
 #include <raymath.h>
 
-extern "C" {
-#include <lualib.h>
-#include <lauxlib.h>
-}
-
 #include "EntityComponentSystem/Components/Components.h"
 #include "EntityComponentSystem/Systems/RenderingSystem.h"
 #include "Renderer/Renderer.h"
-
-
-constexpr float modelScale = 1.f / 1000000000; // Base is meters
+#include "Config.h"
 
 namespace SS3D
 {
@@ -26,10 +19,10 @@ namespace SS3D
         componentsRegister(ecs.componentsRegister),
         entityManager(ecs.entityManager)
     {
-        const toml::table configurationTbl = toml::parse_file(configurationFile.string());
-        const auto resourcesTbl = *configurationTbl.at("resources").as_table();
-        resourcePath = std::filesystem::path(*resourcesTbl.at("resourcePath").value<std::string>());
+        const Config config{configurationFile};
 
+        modelScale = static_cast<float>(config.modelScale);
+        resourcePath = config.resourcePath;
         ecs.componentsRegister->registerComponentType<SS3D::Transform>();
         ecs.componentsRegister->registerComponentType<Motion>();
         ecs.componentsRegister->registerComponentType<Graphics>();
@@ -37,11 +30,9 @@ namespace SS3D
         ecs.componentsRegister->registerComponentType<Orbiting>();
         ecs.componentsRegister->registerComponentType<Camera>();
 
-
-        const auto renderer = std::make_shared<Renderer::Renderer>(1920, 1080);
-        renderer->initialize(*resourcesTbl.at("shaderPath").value<std::string>());
-        const auto skyboxTbl = *configurationTbl.at("skybox").as_table();
-        renderer->setupSkybox(resourcePath / *skyboxTbl.at("textureName").value<std::string>());
+        const auto renderer = std::make_shared<Renderer::Renderer>(config.width, config.height);
+        renderer->initialize(config.shaderPath);
+        renderer->setupSkybox(resourcePath / config.skyboxTexturePath);
         auto renderingSystem = ecs.systemRegister->registerSystem<RenderingSystem>(Signature("00000101"), renderer);
         auto lightingSystem = ecs.systemRegister->registerSystem<LightingSystem>(Signature("00001001"), renderer);
         auto motionSystem = ecs.systemRegister->registerSystem<MovementSystem>(Signature("00000011"));
@@ -61,131 +52,108 @@ namespace SS3D
                                                     });
         componentsRegister->addComponent<Camera>(cameraEntity, SS3D::Camera{});
 
-        const auto sceneTable = *configurationTbl.at("scene").as_table();
-        setSystem(sceneTable);
+        setSystem(config.bodySpawnConfigs);
         spdlog::info("Solar System Initialized");
     }
 
-    void SolarSystem::setSystem(const toml::table& tbl)
+
+    void SolarSystem::setSystem(const std::vector<BodySpawnConfig>& config)
     {
-        auto fillRaylibType = [](const toml::array* array, float* const raylibTypePtr)
+        for (const auto &bodySpawnConfig : config)
         {
-            for (size_t i = 0; i < array->size(); ++i)
-            {
-                auto& elem = (*array)[i];
-                elem.visit([i, raylibTypePtr]<typename elType>(elType&& el)
-                {
-                    if constexpr (toml::is_integer<elType>)
-                        raylibTypePtr[i] = static_cast<float>(**el.as_integer());
-                    if constexpr (toml::is_floating_point<elType>)
-                        raylibTypePtr[i] = static_cast<float>(**el.as_floating_point());
-                });
-            }
-        };
-
-        tbl.for_each([&]<typename EntryType>(EntryType&& entry)
-        {
-            if constexpr (toml::is_table<EntryType>)
-            {
-                const auto name = *entry["name"].template value<std::string>();
-                const auto mass = *entry["mass"].template value<double>();
-                const auto radius = *entry["radius"].template value<double>();
-                const auto scale = *entry["scale"].template value<double>();
-                const auto positionArray = entry["position"].as_array();
-                Vector3 position{};
-                auto* positionPtr = reinterpret_cast<float*>(&position);
-                fillRaylibType(positionArray, positionPtr);
-
-                const auto velocityArray = entry["velocity"].as_array();
-                Vector3 velocity{};
-                auto* velocityPtr = reinterpret_cast<float*>(&velocity);
-                fillRaylibType(velocityArray, velocityPtr);
-
-                const auto attitudeArray = entry["attitude"].as_array();
-                Quaternion attitude{};
-                auto* attitudePtr = reinterpret_cast<float*>(&attitude);
-                fillRaylibType(attitudeArray, attitudePtr);
-
-                const auto rotationSpeedArray = entry["rotationSpeed"].as_array();
-                Vector3 rotationSpeed{};
-                auto* rotationSpeedPtr = reinterpret_cast<float*>(&rotationSpeed);
-                fillRaylibType(rotationSpeedArray, rotationSpeedPtr);
-
-                /*const auto refBodyName = entry["refBody"].template value<std::string>();
-                std::optional<ComponentInstance> refBody{std::nullopt};
-                if (refBodyName.has_value())
-                {
-                    const auto refEntity = entityManager->getEntityByName(*refBodyName);
-                    if (!refEntity.has_value())
-                        throw std::runtime_error("Could not find ref body");
-
-                    refBody = componentsRegister->getComponentInstance<Orbiting>(*refEntity);
-                }*/
-
-                const auto shaderName = entry["shaderName"].template value_or<std::string>("planet");
-                const auto currentEntity = createBody(name, mass, radius * scale, position, velocity, attitude,
-                                                      rotationSpeed,
-                                                      std::nullopt, shaderName);
-
-                if (name == "Sun")
-                {
-                    componentsRegister->addComponent<Light>(currentEntity, SS3D::Light{
-                                                                .handle = 0,
-                                                                .type = LightType::POINT,
-                                                                .color = WHITE,
-                                                                .attenuation = 1000.f,
-                                                            });
-                }
-            }
-        });
+            createBody(bodySpawnConfig);
+        }
     }
 
-    void SolarSystem::setSystem(const std::filesystem::path& luaFile)
+    Entity SolarSystem::createBody(const BodySpawnConfig& config)
     {
-        lua_State* L = luaL_newstate();
-        luaL_openlibs(L);
-        luaopen_math(L);
-        luaopen_string(L);
-        lua_close(L);
-    }
+        const auto bodyEntity = entityManager->createEntity(config.name, "body");
+        bodies[config.name] = bodyEntity;
 
-    Entity SolarSystem::createBody(const std::string& name, const float mass, const float radius,
-                                   const Vector3& position,
-                                   const Vector3& speed,
-                                   const Quaternion& attitude,
-                                   const Vector3& rotationSpeed,
-                                   const std::optional<ComponentInstance> refBody,
-                                   const std::string& shaderName)
-    {
-        const auto bodyEntity = entityManager->createEntity(name, "body");
-        bodies[name] = bodyEntity;
+        std::optional<ComponentInstance> refBody{std::nullopt};
+        if (config.refBodyName.empty())
+        {
+            componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
+                                                            .position = Vector3Scale(config.position, modelScale),
+                                                            .rotation = config.attitude,
+                                                            .scale = config.radius * config.scale * modelScale,
+                                                        });
 
-        componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
-                                                        .position = Vector3Scale(position, modelScale),
-                                                        .rotation = attitude,
-                                                        .scale = radius * modelScale,
-                                                    });
+            componentsRegister->addComponent<Motion>(bodyEntity, SS3D::Motion{
+                                                         .velocity = config.speed * modelScale,
+                                                         .rotationSpeed = config.rotationSpeed,
+                                                     });
+        }
+        else
+        {
+            const auto refBodyEntity = *entityManager->getEntityByName(config.refBodyName);
+            refBody = componentsRegister->getComponentInstance<Orbiting>(refBodyEntity);
+            Vector3 currentPosition = config.position * modelScale;
+            Quaternion currentAttitude = config.attitude;
+            auto currentRotationSpeed = QuaternionFromAxisAngle(Vector3Normalize(config.rotationSpeed),
+                                                                Vector3Length(config.rotationSpeed));
+            Vector3 currentVelocity = config.speed * modelScale;
+            auto currentRefBody = refBody;
 
-        componentsRegister->addComponent<Motion>(bodyEntity, SS3D::Motion{
-                                                     .velocity = speed * modelScale,
-                                                     .rotationSpeed = rotationSpeed,
-                                                 });
+            while (!currentRefBody)
+            {
+                const auto orbitingInstance = refBody;
+                const auto refEntity = componentsRegister->getComponentCollection<Orbiting>()->getEntity(*orbitingInstance);
+                const auto& refTransform = componentsRegister->getComponent<Transform>(refEntity);
+                const auto& refVelocity = componentsRegister->getComponent<Motion>(refEntity);
+
+                const auto angle = Vector3Length(refVelocity.rotationSpeed);
+                const auto axis = Vector3Normalize(refVelocity.rotationSpeed);
+                const auto addedRotation = QuaternionFromAxisAngle(axis, angle);
+
+                currentPosition = refTransform.position + Vector3RotateByQuaternion(currentPosition, addedRotation);
+                currentAttitude = QuaternionMultiply(refTransform.rotation, currentAttitude);
+
+                currentRotationSpeed = QuaternionMultiply(addedRotation, currentRotationSpeed);
+                currentVelocity = refVelocity.velocity + Vector3RotateByQuaternion(currentVelocity, addedRotation) +
+                    Vector3CrossProduct(refVelocity.rotationSpeed, refTransform.position);
+
+                currentRefBody = componentsRegister->getComponentInstance<Orbiting>(refEntity);
+            }
+            componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
+                                                .position = currentPosition,
+                                                .rotation = config.attitude,
+                                                .scale = config.radius * config.scale * modelScale,
+                                            })  ;
+
+            Vector3 finalAxis{};
+            float finalAngle{};
+            QuaternionToAxisAngle(currentAttitude, &finalAxis, &finalAngle);
+
+            const Vector3 finalRotationSpeed = finalAxis * finalAngle;
+            componentsRegister->addComponent<Motion>(bodyEntity, SS3D::Motion{
+                                                         .velocity = currentVelocity,
+                                                         .rotationSpeed = finalRotationSpeed,
+                                                     });
+        }
+
 
         Material material;
-        makeMaterial(name, material, shaderName);
-        const auto Model = LoadModel((resourcePath / "Planet.glb").c_str());
+        makeMaterial(config.name, material, config.shaderName);
+        const auto model = LoadModel((resourcePath / "Planet.glb").c_str());
+        GenMeshTangents(&model.meshes[0]);
 
 
         componentsRegister->addComponent<Graphics>(bodyEntity, SS3D::Graphics{
                                                        .type = GraphicsType::MODEL,
                                                        .material = material,
-                                                       .model = Model,
+                                                       .model = model,
                                                    });
 
         componentsRegister->addComponent<Orbiting>(bodyEntity, SS3D::Orbiting{
-                                                       .mass = mass,
+                                                       .mass = config.mass,
                                                        .refBody = refBody,
                                                    });
+
+        if (config.isLight)
+        {
+            componentsRegister->addComponent<Light>(bodyEntity, SS3D::Light{1});
+        }
 
 
         return bodyEntity;
@@ -234,7 +202,7 @@ namespace SS3D
         const auto texturesPath = resourcePath / "SolarTextures";
         const auto diffuseTexture = LoadTexture((texturesPath / (bodyName + "_diffuse.jpg")).c_str());
         const auto specularTexture = LoadTexture((texturesPath / (bodyName + "_specular.png")).c_str());
-        const auto normalMap = LoadTexture((texturesPath / (bodyName + "_normal.tif")).c_str());
+        const auto normalMap = LoadTexture((texturesPath / (bodyName + "_normal.png")).c_str());
         const auto nightTexture = LoadTexture((texturesPath / (bodyName + "_emit_night.jpg")).c_str());
 
         material = LoadMaterialDefault();
@@ -243,8 +211,5 @@ namespace SS3D
         SetMaterialTexture(&material, MATERIAL_MAP_SPECULAR, specularTexture);
         SetMaterialTexture(&material, MATERIAL_MAP_NORMAL, normalMap);
         SetMaterialTexture(&material, MATERIAL_MAP_EMISSION, nightTexture);
-
-        // const auto nightLocation = GetShaderLocation(material.shader, "texture3");
-        // SetShaderValueTexture(material.shader, nightLocation, nightTexture);
     }
 }

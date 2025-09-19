@@ -182,7 +182,7 @@ namespace SS3D::Renderer
         SetShaderValue(material.shader, GetShaderLocation(material.shader, "time"),
                        (void*)&currentRenderTime, SHADER_ATTRIB_FLOAT);
 
-        float roughness = 0.5;
+        float roughness = 0.05;
         SetShaderValue(material.shader, GetShaderLocation(material.shader, "roughness"),
                        (void*)&roughness, SHADER_ATTRIB_FLOAT);
 

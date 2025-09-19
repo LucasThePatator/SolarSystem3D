@@ -53,7 +53,8 @@ namespace SS3D
     {
         if (positions.empty())
         {
-            spdlog::warn("Can't create octree without position data");
+            spdlog::error("Can't create octree without position data");
+            return;
         }
 
         root = std::make_shared<Node>();
