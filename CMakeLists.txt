@@ -53,6 +53,11 @@ add_executable(3DSolarSystem src/main.cpp
         src/NBodySimulation/BarnesHut.h
         src/Config.cpp
         src/Config.h
+        src/Renderer/PostProcessing.cpp
+        src/Renderer/PostProcessing.h
+        src/Renderer/Bloom.cpp
+        src/Renderer/Bloom.h
+        src/Renderer/PostProcessings.h
 )
 
 link_directories(/usr/local/lib)

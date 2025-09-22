@@ -1,0 +1,10 @@
+//
+// Created by patator on 21/09/2025.
+//
+
+#ifndef INC_3DSOLARSYSTEM_POSTPROCESSINGS_H
+#define INC_3DSOLARSYSTEM_POSTPROCESSINGS_H
+
+#endif //INC_3DSOLARSYSTEM_POSTPROCESSINGS_H
+
+#include "Bloom.h"

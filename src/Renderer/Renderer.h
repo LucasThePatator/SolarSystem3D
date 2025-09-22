@@ -12,6 +12,9 @@
 #include <set>
 #include <string>
 #include <filesystem>
+#include <spdlog/spdlog.h>
+
+#include "PostProcessing.h"
 
 
 namespace SS3D::Renderer
@@ -48,6 +51,12 @@ namespace SS3D::Renderer
         void setupSkybox(const std::filesystem::path& skyboxImagePath);
         void renderSkybox();
 
+        template <typename T>
+        void addPostProcessing(const std::string& name)
+        {
+            postProcessings.push_back(std::make_shared<T>(width, height, &renderTarget));
+        }
+
         ::Camera camera{};
 
     private:
@@ -55,12 +64,16 @@ namespace SS3D::Renderer
         std::unordered_map<std::string, std::array<LightShaderInformation, MAX_LIGHTS>> lightsShaderInformation;
         std::unordered_map<std::string, Shader> shaders;
 
+        RenderTexture2D renderTarget;
+
         Mesh skyboxCube;
         Model skybox;
 
         float currentRenderTime{0};
         int width, height;
         bool inRender{false};
+
+        std::vector<std::shared_ptr<PostProcessing>> postProcessings;
 
         void setupLightShaderInformation();
         static Matrix makeTransformationMatrix(const Vector3& position, const Quaternion& rotation, float scale);

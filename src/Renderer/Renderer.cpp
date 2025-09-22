@@ -26,6 +26,7 @@ namespace SS3D::Renderer
         SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
         InitWindow(width, height, "SolarSystem 3D");
 
+        PostProcessing::shadersDirPath = shadersPath / "postprocess";
         SetTargetFPS(60); // Set our game to run at 60 frames-per-second
 
         for (const auto& dir_entry : std::filesystem::directory_iterator(shadersPath))
@@ -36,8 +37,13 @@ namespace SS3D::Renderer
                 auto vertexShaderPath = dir_entry.path();
                 vertexShaderPath.replace_extension(".vs");
 
-                const Shader shader = LoadShader(vertexShaderPath.string().c_str(),
-                                                 fragmentShaderPath.string().c_str());
+                Shader shader{};
+                if (exists(vertexShaderPath))
+                    shader = LoadShader(vertexShaderPath.string().c_str(),
+                                        fragmentShaderPath.string().c_str());
+                else
+                    shader = LoadShader(nullptr,
+                                        fragmentShaderPath.string().c_str());
 
                 shaders[fragmentShaderPath.stem().string()] = shader;
 
@@ -57,6 +63,8 @@ namespace SS3D::Renderer
         }
 
         setupLightShaderInformation();
+
+        renderTarget = LoadRenderTexture(width, height);
     }
 
     void Renderer::setupSkybox(const std::filesystem::path& skyboxImagePath)
@@ -114,6 +122,7 @@ namespace SS3D::Renderer
         return SRT;
     }
 
+
     void Renderer::updateLight(const LightHandle id, const Vector3& position, const Vector3& target,
                                const Color& color, const bool enabled)
     {
@@ -152,13 +161,40 @@ namespace SS3D::Renderer
 
     void Renderer::startRender()
     {
-        BeginDrawing();
+        BeginTextureMode(renderTarget);
         ClearBackground(BLACK);
         inRender = true;
     }
 
     void Renderer::endRender()
     {
+        EndTextureMode();
+        if (postProcessings.empty())
+        {
+            BeginDrawing();
+            ClearBackground(BLACK);
+            DrawTextureRec(renderTarget.texture,
+                           (Rectangle){
+                               0, 0, static_cast<float>(renderTarget.texture.width),
+                               static_cast<float>(-renderTarget.texture.height)
+                           },
+                           (Vector2){0, 0}, WHITE);
+        }
+        else
+        {
+            for (const auto& p : postProcessings)
+            {
+                p->run();
+            }
+            BeginDrawing();
+            ClearBackground(BLACK);
+            DrawTextureRec(postProcessings.back()->output.texture,
+                           (Rectangle){
+                               0, 0, static_cast<float>(renderTarget.texture.width),
+                               static_cast<float>(-renderTarget.texture.height)
+                           },
+                           (Vector2){0, 0}, WHITE);
+        }
         EndDrawing();
         inRender = false;
     }

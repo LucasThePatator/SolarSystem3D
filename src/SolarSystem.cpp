@@ -11,6 +11,7 @@
 #include "EntityComponentSystem/Systems/RenderingSystem.h"
 #include "Renderer/Renderer.h"
 #include "Config.h"
+#include "Renderer/Bloom.h"
 
 namespace SS3D
 {
@@ -53,13 +54,15 @@ namespace SS3D
         componentsRegister->addComponent<Camera>(cameraEntity, SS3D::Camera{});
 
         setSystem(config.bodySpawnConfigs);
+
+        renderer->addPostProcessing<Bloom>("bloom");
         spdlog::info("Solar System Initialized");
     }
 
 
     void SolarSystem::setSystem(const std::vector<BodySpawnConfig>& config)
     {
-        for (const auto &bodySpawnConfig : config)
+        for (const auto& bodySpawnConfig : config)
         {
             createBody(bodySpawnConfig);
         }
@@ -95,10 +98,11 @@ namespace SS3D
             Vector3 currentVelocity = config.speed * modelScale;
             auto currentRefBody = refBody;
 
-            while (!currentRefBody)
+            while (currentRefBody.has_value())
             {
-                const auto orbitingInstance = refBody;
-                const auto refEntity = componentsRegister->getComponentCollection<Orbiting>()->getEntity(*orbitingInstance);
+                const auto orbitingInstance = currentRefBody;
+                const auto refEntity = componentsRegister->getComponentCollection<Orbiting>()->getEntity(
+                    *orbitingInstance);
                 const auto& refTransform = componentsRegister->getComponent<Transform>(refEntity);
                 const auto& refVelocity = componentsRegister->getComponent<Motion>(refEntity);
 
@@ -113,13 +117,13 @@ namespace SS3D
                 currentVelocity = refVelocity.velocity + Vector3RotateByQuaternion(currentVelocity, addedRotation) +
                     Vector3CrossProduct(refVelocity.rotationSpeed, refTransform.position);
 
-                currentRefBody = componentsRegister->getComponentInstance<Orbiting>(refEntity);
+                currentRefBody = componentsRegister->getComponent<Orbiting>(refEntity).refBody;
             }
             componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
-                                                .position = currentPosition,
-                                                .rotation = config.attitude,
-                                                .scale = config.radius * config.scale * modelScale,
-                                            })  ;
+                                                            .position = currentPosition,
+                                                            .rotation = config.attitude,
+                                                            .scale = config.radius * config.scale * modelScale,
+                                                        });
 
             Vector3 finalAxis{};
             float finalAngle{};
@@ -190,13 +194,15 @@ namespace SS3D
         while (!WindowShouldClose())
         {
             const double newTime = GetTime();
-            const auto deltaTime = 1.f / 60; //static_cast<float>(newTime - lastTime);
+            const auto deltaTime = 1.f / 60; //static_cast<float>(newTime - lastTime); //TODO uncomment
             update(static_cast<float>(deltaTime * std::pow(10, speedUp)));
             lastTime = newTime;
             render();
         }
     }
 
+
+    //TODO should really be move to the renderer
     void SolarSystem::makeMaterial(const std::string& bodyName, Material& material, const std::string& shaderName) const
     {
         const auto texturesPath = resourcePath / "SolarTextures";
