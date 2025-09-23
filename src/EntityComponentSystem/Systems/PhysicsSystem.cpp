@@ -44,7 +44,7 @@ namespace SS3D
         for (const auto& [entity, acc] : std::views::zip(entities, accelerations))
         {
             auto& [velocity, rotationSpeed] = componentsRegister->getComponent<Motion>(entity);
-            velocity = Vector3Add(velocity, Vector3Scale(acc, dt)); //TODO rescale ! And very probably use doubles
+            velocity = Vector3Add(velocity, Vector3Scale(acc, dt));
         }
     }
 

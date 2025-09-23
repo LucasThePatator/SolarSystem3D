@@ -22,5 +22,5 @@ void main()
     vec4 texelColor = texture(texture0, fragTexCoord);
     vec3 rgb = 1.5 * texelColor.rgb * (1 + 0.2 * cos(2 * pi * time * texelColor.r / period));
     finalColor = vec4(rgb, 1);
-    finalColor = pow(finalColor, vec4(1.0 / 2.2));
+    //finalColor = pow(finalColor, vec4(1.0 / 2.2));
 }

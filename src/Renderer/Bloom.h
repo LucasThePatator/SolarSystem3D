@@ -25,13 +25,15 @@ namespace SS3D
         float threshold{1.f};
 
         Shader gaussianBlurShader{};
-        int repeats{1};
+        int repeats{10};
         int horizontalLocation{0};
         int horizontal{1};
 
         int bloomTextureLocation{0};
-        Shader bloomShader{};
+        int exposureLocation{0};
+        float exposure{1.f};
 
+        Shader bloomShader{};
         RenderTexture2D temporaryTexture0{};
         RenderTexture2D temporaryTexture1{};
     };

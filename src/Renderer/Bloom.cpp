@@ -19,6 +19,7 @@ namespace SS3D
 
         bloomShader = LoadShader(nullptr, (shadersDirPath / "bloom.fs").c_str());
         bloomTextureLocation = GetShaderLocation(bloomShader, "bloomTexture");
+        exposureLocation = GetShaderLocation(bloomShader, "exposure");
 
         temporaryTexture0 = LoadRenderTexture(width, height);
         temporaryTexture1 = LoadRenderTexture(width, height);
@@ -37,39 +38,41 @@ namespace SS3D
         EndShaderMode();
         EndTextureMode();
 
-        horizontal = 0;
-        SetShaderValue(gaussianBlurShader, horizontalLocation, (void*)&horizontal, SHADER_UNIFORM_INT);
-        BeginTextureMode(temporaryTexture1);
-        ClearBackground(BLACK);
-        BeginShaderMode(gaussianBlurShader);
-        DrawTextureRec(temporaryTexture0.texture, (Rectangle){
-                           0, 0, static_cast<float>(input->texture.width), static_cast<float>(-input->texture.height)
-                       },
-                       (Vector2){0, 0}, WHITE);
-        EndShaderMode();
-        EndTextureMode();
+        for (int blurI = 0; blurI < repeats; blurI++)
+        {
+            horizontal = 0;
+            SetShaderValue(gaussianBlurShader, horizontalLocation, (void*)&horizontal, SHADER_UNIFORM_INT);
+            BeginTextureMode(temporaryTexture1);
+            ClearBackground(BLACK);
+            BeginShaderMode(gaussianBlurShader);
+            DrawTextureRec(temporaryTexture0.texture, (Rectangle){
+                               0, 0, static_cast<float>(input->texture.width),
+                               static_cast<float>(-input->texture.height)
+                           },
+                           (Vector2){0, 0}, WHITE);
+            EndShaderMode();
+            EndTextureMode();
 
-        horizontal = 1;
-        SetShaderValue(gaussianBlurShader, horizontalLocation, (void*)&horizontal, SHADER_UNIFORM_INT);
-        BeginTextureMode(temporaryTexture0);
-        ClearBackground(BLACK);
-        BeginShaderMode(gaussianBlurShader);
-        DrawTextureRec(temporaryTexture1.texture, (Rectangle){
-                           0, 0, static_cast<float>(input->texture.width), static_cast<float>(-input->texture.height)
-                       },
-                       (Vector2){0, 0}, WHITE);
-        EndShaderMode();
-        EndTextureMode();
+            horizontal = 1;
+            SetShaderValue(gaussianBlurShader, horizontalLocation, (void*)&horizontal, SHADER_UNIFORM_INT);
+            BeginTextureMode(temporaryTexture0);
+            ClearBackground(BLACK);
+            BeginShaderMode(gaussianBlurShader);
+            DrawTextureRec(temporaryTexture1.texture, (Rectangle){
+                               0, 0, static_cast<float>(input->texture.width),
+                               static_cast<float>(-input->texture.height)
+                           },
+                           (Vector2){0, 0}, WHITE);
+            EndShaderMode();
+            EndTextureMode();
+        }
 
         SetShaderValueTexture(bloomShader, bloomTextureLocation, input->texture);
+        SetShaderValue(bloomShader, exposureLocation, &exposure, SHADER_UNIFORM_FLOAT);
+
         BeginTextureMode(output);
         ClearBackground(BLACK);
-        BeginBlendMode(BLEND_ADD_COLORS);
         DrawTextureRec(input->texture, (Rectangle){
-                           0, 0, static_cast<float>(input->texture.width), static_cast<float>(-input->texture.height)
-                       },
-                       (Vector2){0, 0}, WHITE);
-        DrawTextureRec(temporaryTexture0.texture, (Rectangle){
                            0, 0, static_cast<float>(input->texture.width), static_cast<float>(-input->texture.height)
                        },
                        (Vector2){0, 0}, WHITE);

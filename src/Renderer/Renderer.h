@@ -31,6 +31,7 @@ namespace SS3D::Renderer
         int targetLoc{-1};
         int colorLoc{-1};
         int attenuationLoc{-1};
+        int powerLoc{-1};
     };
 
     class Renderer
@@ -39,7 +40,7 @@ namespace SS3D::Renderer
         Renderer(int width, int height);
         void initialize(const std::filesystem::path& shadersPath);
         void updateLight(LightHandle id, const Vector3& position, const Vector3& target, const Color& color,
-                         bool enabled = true);
+                         float power, bool enabled = true);
         void setTime(float dt);
         void startRender();
         void endRender();

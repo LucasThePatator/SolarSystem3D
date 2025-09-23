@@ -32,6 +32,7 @@ struct Light {
     vec3 position;
     vec3 target;
     vec4 color;
+    float power;
 };
 
 // Input lighting values
@@ -73,6 +74,9 @@ void main()
                 light = normalize(lights[i].position - fragPosition);
             }
 
+            float dist = distance(lights[i].position, fragPosition);
+            float localPower = lights[i].power / (dist * dist);
+
             vec3 H = normalize(viewD + light);
 
             float NdotL = dot(normal, light);
@@ -92,17 +96,17 @@ void main()
 
                 vec3 rs = D * G * F / (4 * NdotL * NdotV);
                 //finalColor += vec4(F,1);
-                finalColor += vec4(lightDot * tint.rgb * texelColor.rgb * ((1 - 0.75 * specularTexelColor.rgb) + 0.75 * specularTexelColor.rgb * rs), 1);
+                finalColor += localPower * vec4(lightDot * tint.rgb * texelColor.rgb * ((1 - 0.75 * specularTexelColor.rgb) + 0.75 * specularTexelColor.rgb * rs), 1);
 
             } else
             {
-                finalColor += NdotV * 0.04 * texelNight * (1 - specularTexelColor.r);
+                finalColor += NdotV * 0.1 * texelNight * (1 - specularTexelColor.r);
             }
         }
     }
     finalColor += texelColor*(ambient/10.0)*tint;
 
     // Gamma correction
-    finalColor = pow(finalColor, vec4(1.0/2.2));
+    //finalColor = pow(finalColor, vec4(1.0/2.2));
     finalColor.a = 1.0;
 }

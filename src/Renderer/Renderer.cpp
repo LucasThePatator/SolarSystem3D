@@ -106,6 +106,8 @@ namespace SS3D::Renderer
                     shader, TextFormat("lights[%i].target", h));
                 lightsShaderInformation[shaderName][h].colorLoc = GetShaderLocation(
                     shader, TextFormat("lights[%i].color", h));
+                lightsShaderInformation[shaderName][h].powerLoc = GetShaderLocation(
+                    shader, TextFormat("lights[%i].power", h));
             }
         }
     }
@@ -124,7 +126,7 @@ namespace SS3D::Renderer
 
 
     void Renderer::updateLight(const LightHandle id, const Vector3& position, const Vector3& target,
-                               const Color& color, const bool enabled)
+                               const Color& color, float power, const bool enabled)
     {
         for (const auto& [shaderName, shader] : shaders)
         {
@@ -151,6 +153,7 @@ namespace SS3D::Renderer
                 static_cast<float>(color.a) / 255.f
             };
             SetShaderValue(shader, lightShaderInfo.colorLoc, color_data, SHADER_UNIFORM_VEC4);
+            SetShaderValue(shader, lightShaderInfo.powerLoc, &power, SHADER_UNIFORM_FLOAT);
         }
     }
 
