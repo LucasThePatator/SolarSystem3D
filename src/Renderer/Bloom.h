@@ -27,7 +27,7 @@ namespace SS3D
         Shader gaussianBlurShader{};
         int repeats{1};
         int horizontalLocation{0};
-        uint8_t horizontal{true};
+        int horizontal{1};
 
         int bloomTextureLocation{0};
         Shader bloomShader{};

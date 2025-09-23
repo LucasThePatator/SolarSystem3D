@@ -10,6 +10,8 @@
 #include "src/Renderer/Renderer.h"
 
 #define RAYGUI_IMPLEMENTATION
+#include <raymath.h>
+
 #include "src/Renderer/raygui.h"
 
 namespace SS3D
@@ -71,7 +73,7 @@ namespace SS3D
         }
         if (IsKeyPressed(KEY_R))
         {
-            transform.position = Vector3{100.f, 10.f, 0.f};
+            transform.position = Vector3Add(currentTarget, Vector3{currentTargetRadius * 3.f, 0.f, 0.f});
             target = currentTarget;
             spdlog::info("Position reset");
         }
@@ -111,6 +113,7 @@ namespace SS3D
             const auto& targetEntityTransform = componentsRegister->getComponent<Transform>(*targetEntity);
 
             currentTarget = targetEntityTransform.position;
+            currentTargetRadius = targetEntityTransform.scale;
         }
 
         auto* const speedUp = static_cast<float*>(parameterPointers.at("speedUp"));

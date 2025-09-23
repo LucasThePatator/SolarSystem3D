@@ -15,14 +15,13 @@ namespace SS3D
         thresholdLocation = GetShaderLocation(thresholdShader, "threshold");
 
         gaussianBlurShader = LoadShader(nullptr, (shadersDirPath / "gaussian_blur.fs").c_str());
-        horizontal = GetShaderLocation(gaussianBlurShader, "horizontal");
+        horizontalLocation = GetShaderLocation(gaussianBlurShader, "horizontal");
 
         bloomShader = LoadShader(nullptr, (shadersDirPath / "bloom.fs").c_str());
         bloomTextureLocation = GetShaderLocation(bloomShader, "bloomTexture");
 
         temporaryTexture0 = LoadRenderTexture(width, height);
         temporaryTexture1 = LoadRenderTexture(width, height);
-
 
         SetShaderValue(thresholdShader, thresholdLocation, (void*)&threshold, SHADER_UNIFORM_FLOAT);
     }
@@ -38,8 +37,8 @@ namespace SS3D
         EndShaderMode();
         EndTextureMode();
 
-        horizontal = false;
-        SetShaderValue(gaussianBlurShader, horizontalLocation, (void*)&horizontal, SHADER_UNIFORM_UINT);
+        horizontal = 0;
+        SetShaderValue(gaussianBlurShader, horizontalLocation, (void*)&horizontal, SHADER_UNIFORM_INT);
         BeginTextureMode(temporaryTexture1);
         ClearBackground(BLACK);
         BeginShaderMode(gaussianBlurShader);
@@ -50,8 +49,8 @@ namespace SS3D
         EndShaderMode();
         EndTextureMode();
 
-        horizontal = true;
-        SetShaderValue(gaussianBlurShader, horizontalLocation, (void*)&horizontal, SHADER_UNIFORM_UINT);
+        horizontal = 1;
+        SetShaderValue(gaussianBlurShader, horizontalLocation, (void*)&horizontal, SHADER_UNIFORM_INT);
         BeginTextureMode(temporaryTexture0);
         ClearBackground(BLACK);
         BeginShaderMode(gaussianBlurShader);
@@ -65,7 +64,7 @@ namespace SS3D
         SetShaderValueTexture(bloomShader, bloomTextureLocation, input->texture);
         BeginTextureMode(output);
         ClearBackground(BLACK);
-        BeginBlendMode(BLEND_ADDITIVE);
+        BeginBlendMode(BLEND_ADD_COLORS);
         DrawTextureRec(input->texture, (Rectangle){
                            0, 0, static_cast<float>(input->texture.width), static_cast<float>(-input->texture.height)
                        },

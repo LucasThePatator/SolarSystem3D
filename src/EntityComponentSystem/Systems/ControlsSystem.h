@@ -10,6 +10,8 @@
 #include <raylib.h>
 #include <unordered_map>
 
+#include "src/EntityComponentSystem/Components/Transform.h"
+
 namespace SS3D
 {
     namespace Renderer
@@ -37,6 +39,7 @@ namespace SS3D
         bool checked{false};
 
         Vector3 currentTarget{};
+        float currentTargetRadius{1.f};
     };
 } // SS3D
 
