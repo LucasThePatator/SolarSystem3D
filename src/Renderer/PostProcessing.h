@@ -8,6 +8,8 @@
 #include <raylib.h>
 #include <filesystem>
 
+#include "RaylibUtils.h"
+
 namespace SS3D
 {
     class PostProcessing

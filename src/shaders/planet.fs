@@ -84,7 +84,7 @@ void main()
             float NdotV = dot(normal, viewD);
             float VdotH = dot(viewD, H);
 
-            if(NdotL > 0.01)
+            if (NdotL > 0.0)
             {
                 vec3 lightDot = lights[i].color.rgb*NdotL;
 

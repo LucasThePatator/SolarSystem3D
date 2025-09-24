@@ -58,6 +58,8 @@ add_executable(3DSolarSystem src/main.cpp
         src/Renderer/Bloom.cpp
         src/Renderer/Bloom.h
         src/Renderer/PostProcessings.h
+        src/Renderer/RaylibUtils.cpp
+        src/Renderer/RaylibUtils.h
 )
 
 link_directories(/usr/local/lib)

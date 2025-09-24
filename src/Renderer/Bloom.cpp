@@ -21,8 +21,8 @@ namespace SS3D
         bloomTextureLocation = GetShaderLocation(bloomShader, "texture1");
         exposureLocation = GetShaderLocation(bloomShader, "exposure");
 
-        temporaryTexture0 = LoadRenderTexture(width, height);
-        temporaryTexture1 = LoadRenderTexture(width, height);
+        temporaryTexture0 = LoadRenderTextureWithFormat(width, height, PIXELFORMAT_UNCOMPRESSED_R32G32B32A32);
+        temporaryTexture1 = LoadRenderTextureWithFormat(width, height, PIXELFORMAT_UNCOMPRESSED_R32G32B32A32);
 
         SetShaderValue(thresholdShader, thresholdLocation, (void*)&threshold, SHADER_UNIFORM_FLOAT);
     }

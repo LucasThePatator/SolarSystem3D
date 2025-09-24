@@ -64,7 +64,7 @@ namespace SS3D::Renderer
 
         setupLightShaderInformation();
 
-        renderTarget = LoadRenderTexture(width, height);
+        renderTarget = LoadRenderTextureWithFormat(width, height, PIXELFORMAT_UNCOMPRESSED_R32G32B32A32);
     }
 
     void Renderer::setupSkybox(const std::filesystem::path& skyboxImagePath)

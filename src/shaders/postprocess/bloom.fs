@@ -7,8 +7,8 @@ in vec4 fragColor;
 // Input uniform values
 uniform sampler2D texture0;
 uniform sampler2D texture1;
-
 uniform float exposure;
+
 out vec4 finalColor;
 
 void main()

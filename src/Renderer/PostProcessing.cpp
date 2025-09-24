@@ -12,7 +12,7 @@ namespace SS3D
                                    const int scale_w, const int scale_h) :
         input(inputTexture)
     {
-        output = LoadRenderTexture(width * scale_w, height * scale_h);
+        output = LoadRenderTextureWithFormat(width * scale_w, height * scale_h, PIXELFORMAT_UNCOMPRESSED_R32G32B32A32);
     }
 }
 

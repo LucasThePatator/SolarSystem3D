@@ -12,9 +12,7 @@ out vec4 finalColor;
 void main()
 {
     // Fetch color from texture map
-    vec3 color = vec3(0.1);
-
-    color = texture(cubeMap, fragPosition.xyz).rgb;
+    vec3 color = texture(cubeMap, fragPosition.xyz).rgb;
 
     // Calculate final fragment color
     finalColor = vec4(color, 1.0);
