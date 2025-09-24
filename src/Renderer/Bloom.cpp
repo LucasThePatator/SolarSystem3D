@@ -18,7 +18,7 @@ namespace SS3D
         horizontalLocation = GetShaderLocation(gaussianBlurShader, "horizontal");
 
         bloomShader = LoadShader(nullptr, (shadersDirPath / "bloom.fs").c_str());
-        bloomTextureLocation = GetShaderLocation(bloomShader, "bloomTexture");
+        bloomTextureLocation = GetShaderLocation(bloomShader, "texture1");
         exposureLocation = GetShaderLocation(bloomShader, "exposure");
 
         temporaryTexture0 = LoadRenderTexture(width, height);
@@ -67,16 +67,16 @@ namespace SS3D
             EndTextureMode();
         }
 
-        SetShaderValueTexture(bloomShader, bloomTextureLocation, input->texture);
-        SetShaderValue(bloomShader, exposureLocation, &exposure, SHADER_UNIFORM_FLOAT);
-
         BeginTextureMode(output);
         ClearBackground(BLACK);
+        BeginShaderMode(bloomShader);
+        SetShaderValueTexture(bloomShader, bloomTextureLocation, temporaryTexture0.texture);
+        SetShaderValue(bloomShader, exposureLocation, &exposure, SHADER_UNIFORM_FLOAT);
         DrawTextureRec(input->texture, (Rectangle){
                            0, 0, static_cast<float>(input->texture.width), static_cast<float>(-input->texture.height)
                        },
                        (Vector2){0, 0}, WHITE);
-        EndBlendMode();
+        EndShaderMode();
         EndTextureMode();
     }
 } // SS3D
