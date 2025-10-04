@@ -74,6 +74,28 @@ namespace SS3D
         return Vector4(value[0], value[1], value[2], value[3]);
     }
 
+    std::unordered_map<std::string, std::variant<int, float, Vector3>> parseRenderParameters(lua_State* L)
+    {
+        std::unordered_map<std::string, std::variant<int, float, Vector3>> renderParameters;
+        lua_getfield(L, -1, "renderParameters");
+        if (lua_istable(L, -1))
+        {
+            const int t = lua_gettop(L);
+            lua_pushnil(L);
+            while (lua_next(L, t) != 0)
+            {
+                if (lua_isinteger(L, -1))
+                    renderParameters[lua_tostring(L, -2)] = static_cast<int>(lua_tonumber(L, -1));
+                else
+                    renderParameters[lua_tostring(L, -2)] = static_cast<float>(lua_tonumber(L, -1));
+
+                lua_pop(L, 1);
+            }
+        }
+        lua_pop(L, 1);
+        return renderParameters;
+    };
+
     BodySpawnConfig getBodySpawnConfig(lua_State* L)
     {
         BodySpawnConfig config{};
@@ -92,6 +114,30 @@ namespace SS3D
             config.isLight = true;
         }
 
+        config.renderParameters = parseRenderParameters(L);
+
+        return config;
+    }
+
+    ModelSpawnConfig getModelSpawnConfig(lua_State* L)
+    {
+        ModelSpawnConfig config{};
+        config.name = *getStringField(L, "name");
+        config.modelPath = *getStringField(L, "modelPath");
+        config.mass = static_cast<float>(*getNumberField(L, "mass"));
+        config.scale = static_cast<float>(*getNumberField(L, "scale"));
+        config.position = Array2Vector3(getArrayField<3>(L, "position"));
+        config.speed = Array2Vector3(getArrayField<3>(L, "velocity"));
+        config.rotationSpeed = Array2Vector3(getArrayField<3>(L, "attitude"));
+        config.refBodyName = *getStringField(L, "refBodyName");
+        config.shaderName = *getStringField(L, "shaderName");
+        if (const auto lightIntensity = getNumberField(L, "lightIntensity"); lightIntensity.has_value())
+        {
+            config.lightIntensity = static_cast<float>(*lightIntensity);
+            config.isLight = true;
+        }
+
+        config.renderParameters = parseRenderParameters(L);
         return config;
     }
 
@@ -127,10 +173,9 @@ namespace SS3D
         lua_remove(L, 1);
         lua_getglobal(L, "SkyboxTexturePath");
         skyboxTexturePath = lua_tostring(L, -1);
-        //lua_remove(L, 1);
+        lua_remove(L, 1);
 
         lua_getglobal(L, "Bodies");
-
         for (int i = 0; true; i++)
         {
             if (lua_geti(L, -1, i + 1) == LUA_TNIL)
@@ -138,7 +183,16 @@ namespace SS3D
             bodySpawnConfigs.push_back(getBodySpawnConfig(L));
             lua_pop(L, 1);
         }
+        lua_pop(L, 2);
 
+        lua_getglobal(L, "Models");
+        for (int i = 0; true; i++)
+        {
+            if (lua_geti(L, -1, i + 1) == LUA_TNIL)
+                break;
+            modelSpawnConfigs.push_back(getModelSpawnConfig(L));
+            lua_pop(L, 1);
+        }
         lua_pop(L, 2);
 
         lua_close(L);

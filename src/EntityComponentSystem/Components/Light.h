@@ -22,7 +22,7 @@ namespace SS3D
         Renderer::LightHandle handle{-1};
         LightType type{};
         Color color{WHITE};
-        float attenuation{1.f};
+        float power{1.f};
         Vector3 target{};
     };
 };

@@ -90,11 +90,15 @@ namespace SS3D
 
     void ControlsSystem::renderGui()
     {
-        const auto& bodyEntities = entityManager->getEntitiesByTag("body");
+        auto entities = *entityManager->getEntitiesByTag("body");
+        const auto modelEntities = *entityManager->getEntitiesByTag("model");
+
+        entities.insert(entities.cend(), modelEntities.begin(), modelEntities.end());
+
         std::vector<std::string> bodyNames;
         std::string bodyNamesString{};
 
-        for (const auto& entity : *bodyEntities)
+        for (const auto& entity : entities)
         {
             const std::string& bodyName = entityManager->getEntityName(entity);
             bodyNamesString += bodyName + ";";

@@ -25,7 +25,7 @@ namespace SS3D
         {
             const auto& [position, rotation, scale] = componentsRegister->getComponent<SS3D::Transform>(entity);
             const auto& light = componentsRegister->getComponent<Light>(entity);
-            renderer->updateLight(light.handle, position, light.target, light.color, 2e9, true);
+            renderer->updateLight(light.handle, position, light.target, light.color, light.power, true);
         }
     }
 
