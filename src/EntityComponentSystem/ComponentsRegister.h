@@ -42,6 +42,16 @@ namespace SS3D
         }
 
         template <typename ComponentType>
+        ComponentInstance addComponent(const Entity entity, ComponentInstance instance)
+        {
+            auto collection = getComponentCollection<ComponentType>();
+            collection->addComponent(entity, instance);
+
+            updateSignature<ComponentType>(entity, true);
+            return instance;
+        }
+
+        template <typename ComponentType>
         void removeComponent(const Entity entity)
         {
             auto collection = getComponentCollection<ComponentType>();

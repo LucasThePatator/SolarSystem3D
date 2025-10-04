@@ -1,4 +1,4 @@
-#version 420 core
+#version 420
 
 // Input vertex attributes
 in vec3 vertexPosition;

@@ -32,6 +32,12 @@ namespace SS3D
             return instance;
         }
 
+        ComponentInstance addComponent(const Entity e, ComponentInstance instance)
+        {
+            instances[e] = instance;
+            return instance;
+        }
+
         void removeComponent(const Entity e)
         {
             //Keep things packed

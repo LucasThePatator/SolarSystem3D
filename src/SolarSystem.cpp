@@ -31,7 +31,7 @@ namespace SS3D
         ecs.componentsRegister->registerComponentType<Orbiting>();
         ecs.componentsRegister->registerComponentType<Camera>();
 
-        const auto renderer = std::make_shared<Renderer::Renderer>(config.width, config.height);
+        const auto renderer = std::make_shared<Renderer::Renderer>(config.width, config.height, config.modelScale);
         renderer->initialize(config.shaderPath);
         renderer->setupSkybox(resourcePath / config.skyboxTexturePath);
         auto renderingSystem = ecs.systemRegister->registerSystem<RenderingSystem>(Signature("00000101"), renderer);
@@ -120,13 +120,15 @@ namespace SS3D
         bodies[config.name] = bodyEntity;
 
         std::optional<ComponentInstance> refBody{std::nullopt};
+
+        ComponentInstance transformInstance{};
         if (config.refBodyName.empty())
         {
-            componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
-                                                            .position = Vector3Scale(config.position, modelScale),
-                                                            .rotation = config.attitude,
-                                                            .scale = config.radius * config.scale * modelScale,
-                                                        });
+            transformInstance = componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
+                                                                                .position = Vector3Scale(config.position, modelScale),
+                                                                                .rotation = config.attitude,
+                                                                                .scale = config.radius * config.scale * modelScale,
+                                                                            });
 
             componentsRegister->addComponent<Motion>(bodyEntity, SS3D::Motion{
                                                          .velocity = config.speed * modelScale,
@@ -141,11 +143,11 @@ namespace SS3D
             Quaternion currentRotationSpeed;
             getGlobalTransformMotion(config, refBody, currentPosition, currentAttitude, currentVelocity,
                                      currentRotationSpeed);
-            componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
-                                                            .position = currentPosition,
-                                                            .rotation = currentAttitude,
-                                                            .scale = config.radius * config.scale * modelScale,
-                                                        });
+            transformInstance = componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
+                                                                                .position = currentPosition,
+                                                                                .rotation = currentAttitude,
+                                                                                .scale = config.radius * config.scale * modelScale,
+                                                                            });
 
             Vector3 finalAxis{};
             float finalAngle{};
@@ -179,7 +181,22 @@ namespace SS3D
         if (config.isLight)
         {
             componentsRegister->addComponent<Light>(
-                bodyEntity, SS3D::Light{.handle = 1, .power = static_cast<float>(config.lightIntensity)});
+                bodyEntity, SS3D::Light{.handle = 0, .power = static_cast<float>(config.lightIntensity)});
+        }
+
+        if (config.name == "Earth")
+        {
+            const auto atmoEntity = entityManager->createEntity(config.name + "_atmo", "atmo");
+            componentsRegister->addComponent<Transform>(atmoEntity, transformInstance);
+            material = LoadMaterialDefault();
+            material.shader = ecs.systemRegister->getSystem<RenderingSystem>()->renderer->getShader("atmo_scattering");
+
+            componentsRegister->addComponent<Graphics>(atmoEntity, {
+                                                           .type=GraphicsType::ATMOSPHERE,
+                                                           .material = material,
+                                                           .model = model,
+                                                       });
+
         }
 
         spdlog::info("Created {}", config.name);
@@ -230,9 +247,16 @@ namespace SS3D
         }
 
 
-        Material material;
         const auto model = LoadModel((resourcePath / config.modelPath).c_str());
-        GenMeshTangents(&model.meshes[0]);
+        for (int meshI = 0; meshI < model.meshCount; meshI++)
+        {
+            //GenMeshTangents(&model.meshes[meshI]);
+        }
+        for (int materialI = 0; materialI < model.materialCount; materialI++)
+        {
+            model.materials[materialI].shader = ecs.systemRegister->getSystem<RenderingSystem>()->renderer->
+                                                    getShader(config.shaderName);
+        }
 
 
         componentsRegister->addComponent<Graphics>(bodyEntity, SS3D::Graphics{
@@ -245,12 +269,6 @@ namespace SS3D
                                                        .mass = config.mass,
                                                        .refBody = refBody,
                                                    });
-
-        if (config.isLight)
-        {
-            componentsRegister->addComponent<Light>(
-                bodyEntity, SS3D::Light{.handle = 1, .power = static_cast<float>(config.lightIntensity)});
-        }
 
         spdlog::info("Created {}", config.name);
         return bodyEntity;

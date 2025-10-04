@@ -15,6 +15,7 @@ uniform sampler2D nightEmissionMap; //diffuse night
 uniform vec4 colDiffuse;
 
 uniform float roughness;
+uniform float n;
 
 // Output fragment color
 out vec4 finalColor;
@@ -45,6 +46,7 @@ void main()
     // Texel color fetching from texture sampler
     vec4 texelColor = texture(diffuseMap, fragTexCoord);
     vec4 texelNight = texture(nightEmissionMap, fragTexCoord);
+    //vec3 normal = normalize(fragNormal);
 
     vec3 normal = texture(normalMap, vec2(fragTexCoord.x, fragTexCoord.y)).rgb;
     normal = normalize(normal * 2.0 - 1.0);
@@ -53,7 +55,7 @@ void main()
     vec3 viewD = normalize(viewPos - fragPosition);
     vec3 specular = vec3(0.0);
     vec4 specularTexelColor = texture(specularMap, fragTexCoord);
-    vec3 n = 1.33 * specularTexelColor.rgb;
+    vec3 n = n * specularTexelColor.rgb;
 
     vec4 tint = colDiffuse * fragColor;
 
@@ -83,30 +85,22 @@ void main()
             float NdotV = dot(normal, viewD);
             float VdotH = dot(viewD, H);
 
-            if (dot(normalize(fragNormal), light) >= -0.2 && NdotL >= 0)
-            {
-                vec3 lightDot = lights[i].color.rgb*NdotL;
+            vec3 lightDot = lights[i].color.rgb*NdotL;
 
-                float alphaSquared = roughness * roughness;
-                float D = pow(HdotN, (2 / alphaSquared) - 2) / (M_PI * alphaSquared);
-                float G = min(1.0, min(2 * HdotN * NdotV / VdotH, 2 * HdotN * NdotL / VdotH));
-                vec3 F0 = pow(n - 1, vec3(2)) / pow(n + 1, vec3(2));
-                vec3 F = F0 + (1 - F0) * pow(1 - VdotH, 5);
+            float alphaSquared = roughness * roughness;
+            float D = pow(HdotN, (2 / alphaSquared) - 2) / (M_PI * alphaSquared);
+            float G = min(1.0, min(2 * HdotN * NdotV / VdotH, 2 * HdotN * NdotL / VdotH));
+            vec3 F0 = pow(n - 1, vec3(2)) / pow(n + 1, vec3(2));
+            vec3 F = F0 + (1 - F0) * pow(1 - VdotH, 5);
 
-                vec3 rs = D * G * F / (4 * NdotL * NdotV);
-                //finalColor += vec4(F,1);
-                finalColor += localPower * vec4(lightDot * tint.rgb * texelColor.rgb * ((1 - 0.75 * specularTexelColor.rgb) + 0.75 * specularTexelColor.rgb * rs), 1);
+            vec3 rs = D * G * F / (4 * NdotL * NdotV);
+            finalColor += localPower * vec4(lightDot * tint.rgb * texelColor.rgb * ((1 - 0.75 * specularTexelColor.rgb) + 0.75 * specularTexelColor.rgb * rs), 1);
 
-            } else
-            {
-                finalColor += NdotV * 0.1 * texelNight * (1 - specularTexelColor.r);
-            }
         }
     }
+    finalColor += texelColor*(ambient/10.0)*tint;
 
-    finalColor = finalColor;
     // Gamma correction
     //finalColor = pow(finalColor, vec4(1.0/2.2));
     finalColor.a = 1.0;
-    finalColor = clamp(finalColor, 0, 1.01);
 }

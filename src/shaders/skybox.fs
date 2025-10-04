@@ -15,5 +15,5 @@ void main()
     vec3 color = texture(cubeMap, fragPosition.xyz).rgb;
 
     // Calculate final fragment color
-    finalColor = vec4(color, 1.0);
+    finalColor = vec4(pow(color, vec3(2.2)), 1.0);
 }

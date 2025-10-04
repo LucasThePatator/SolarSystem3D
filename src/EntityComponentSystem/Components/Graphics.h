@@ -16,6 +16,7 @@ namespace SS3D
     {
         SPHERE,
         MODEL,
+        ATMOSPHERE,
     };
 
     struct Graphics
@@ -23,7 +24,6 @@ namespace SS3D
         GraphicsType type;
         Material material;
         Model model;
-        Mesh mesh;
         std::unordered_map<std::string, std::variant<int, float, Vector3>> renderParameters;
     };
 }

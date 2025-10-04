@@ -19,7 +19,7 @@
 
 namespace SS3D::Renderer
 {
-    constexpr size_t MAX_LIGHTS = 4;
+    constexpr size_t MAX_LIGHTS = 1;
 
     using LightHandle = int32_t;
 
@@ -39,7 +39,7 @@ namespace SS3D::Renderer
     class Renderer
     {
     public:
-        Renderer(int width, int height);
+        Renderer(int width, int height, float modelScale);
         void initialize(const std::filesystem::path& shadersPath);
         void updateLight(LightHandle id, const Vector3& position, const Vector3& target, const Color& color,
                          float power, bool enabled = true);
@@ -55,6 +55,10 @@ namespace SS3D::Renderer
         const Shader& getShader(const std::string& shader_name) const { return shaders.at(shader_name); }
         void setupSkybox(const std::filesystem::path& skyboxImagePath);
         void renderSkybox() const;
+        void renderAtmosphere(const Mesh& mesh, const Material& material, const Vector3& position,
+                              const Quaternion& attitude,
+                              float scale,
+                              const std::unordered_map<std::string, std::variant<int, float, Vector3>>& renderParameters);
 
         template <typename T>
         void addPostProcessing(const std::string& name)
@@ -84,6 +88,7 @@ namespace SS3D::Renderer
         int width, height;
         bool inRender{false};
 
+        float modelScale{1.f};
         std::vector<std::shared_ptr<PostProcessing>> postProcessings;
 
         void setupLightShaderInformation();

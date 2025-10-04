@@ -16,8 +16,8 @@
 
 namespace SS3D::Renderer
 {
-    Renderer::Renderer(const int width, const int height) :
-        width(width), height(height)
+    Renderer::Renderer(const int width, const int height, const float modelScale) :
+        width(width), height(height), modelScale(modelScale)
     {
     }
 
@@ -45,21 +45,28 @@ namespace SS3D::Renderer
                     shader = LoadShader(nullptr,
                                         fragmentShaderPath.string().c_str());
 
+                // Vérifier si le shader est valide
+                if (shader.id == 0)
+                {
+                   throw std::runtime_error("Failed to load shader: " + fragmentShaderPath.stem().string());
+                }
+
+                spdlog::info("Loaded shader: {} (ID: {})", fragmentShaderPath.stem().string(), shader.id);
+
                 shaders[fragmentShaderPath.stem().string()] = shader;
 
 
                 shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
+                shader.locs[SHADER_LOC_MATRIX_MODEL] = GetShaderLocation(shader, "matModel");
+                shader.locs[SHADER_LOC_MATRIX_VIEW] = GetShaderLocation(shader, "matView");
+                shader.locs[SHADER_LOC_MATRIX_PROJECTION] = GetShaderLocation(shader, "matProjection");
 
                 shader.locs[SHADER_LOC_MAP_DIFFUSE] = GetShaderLocation(shader, "diffuseMap");
-                // Choose any name you use on the shader for texture used as diffuse
                 shader.locs[SHADER_LOC_MAP_SPECULAR] = GetShaderLocation(shader, "specularMap");
-                // Choose any name you use on the shader for texture used as specular/metalness
                 shader.locs[SHADER_LOC_MAP_NORMAL] = GetShaderLocation(shader, "normalMap");
-                // Choose any name you use on the shader for texture used as normal
                 shader.locs[SHADER_LOC_MAP_EMISSION] = GetShaderLocation(shader, "nightEmissionMap");
-                // Choose any name you use on the shader for texture used as normal
                 shader.locs[SHADER_LOC_MAP_CUBEMAP] = GetShaderLocation(shader, "cubeMap");
-                // Choose any name you use on the shader for texture used as diffuse
+                shader.locs[SHADER_LOC_MAP_IRRADIANCE] = GetShaderLocation(shader, "irradianceMap");
             }
         }
 
@@ -185,6 +192,77 @@ namespace SS3D::Renderer
         DrawMesh(mesh, material, matrix);
     }
 
+    void Renderer::setupSkybox(const std::filesystem::path& skyboxImagePath)
+    {
+        skyboxCube = GenMeshCube(1.0f, 1.0f, 1.0f);
+        skybox = LoadModelFromMesh(skyboxCube);
+
+        skybox.materials[0].shader = shaders.at("skybox");
+
+        const Image skyboxImg = LoadImage(skyboxImagePath.c_str());
+        skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = LoadTextureCubemap(
+            skyboxImg, CUBEMAP_LAYOUT_AUTO_DETECT);
+        UnloadImage(skyboxImg);
+    }
+
+    void Renderer::renderSkybox() const
+    {
+        // We are inside the cube, we need to disable backface culling!
+        rlDisableBackfaceCulling();
+        rlDisableDepthMask();
+        DrawModel(skybox, (Vector3){0, 0, 0}, 1.0f, WHITE);
+        rlEnableBackfaceCulling();
+        rlEnableDepthMask();
+    }
+
+
+    void Renderer::renderAtmosphere(const Mesh& mesh, const Material& material, const Vector3& position,
+                                    const Quaternion& attitude,
+                                    const float scale,
+                                    const std::unordered_map<std::string, std::variant<int, float, Vector3>>&
+                                    renderParameters)
+    {
+        if (!inRender)
+        {
+            throw std::runtime_error("Renderer::renderMesh: Not in render mode");
+        }
+
+        if (!IsMaterialValid(material))
+        {
+            throw std::runtime_error("Material is not valid!");
+        }
+
+        SetShaderValue(material.shader, material.shader.locs[SHADER_LOC_VECTOR_VIEW], (void*)&camera.position,
+                       SHADER_UNIFORM_VEC3);
+
+        setShaderUniformValue(material.shader, "planetRadius", scale);
+        setShaderUniformValue(material.shader, "atmosphereRadius", scale * 1.1f);
+        setShaderUniformValue(material.shader, "scale", modelScale);
+
+
+        for (auto& [name, value] : renderParameters)
+        {
+            switch (value.index())
+            {
+            case 0:
+                setShaderUniformValue(material.shader, name, std::get<0>(value));
+                break;
+            case 1:
+                setShaderUniformValue(material.shader, name, std::get<1>(value));
+                break;
+            case 2:
+                setShaderUniformValue(material.shader, name, std::get<2>(value));
+                break;
+            default: ;
+            }
+        }
+
+        const auto matrix = makeTransformationMatrix(position, attitude, scale);
+        BeginBlendMode(BLEND_ADDITIVE);
+        DrawMesh(mesh, material, matrix);
+        EndBlendMode();
+    }
+
     void Renderer::renderModel(const Model& model, const Vector3& position, const Quaternion& attitude,
                                const float scale,
                                const std::unordered_map<std::string, std::variant<int, float, Vector3>>&
@@ -209,7 +287,6 @@ namespace SS3D::Renderer
                 switch (value.index())
                 {
                 case 0:
-
                     setShaderUniformValue(model.materials[i].shader, name, std::get<0>(value));
                     break;
                 case 1:
@@ -227,31 +304,8 @@ namespace SS3D::Renderer
         float rotationAngle;
         Vector3 rotationAxis;
         QuaternionToAxisAngle(attitude, &rotationAxis, &rotationAngle);
-        DrawModelEx(model, position, rotationAxis, rotationAngle, {scale, scale, scale}, {1, 1, 1});
-    }
-
-
-    void Renderer::setupSkybox(const std::filesystem::path& skyboxImagePath)
-    {
-        skyboxCube = GenMeshCube(1.0f, 1.0f, 1.0f);
-        skybox = LoadModelFromMesh(skyboxCube);
-
-        skybox.materials[0].shader = shaders.at("skybox");
-
-        const Image skyboxImg = LoadImage(skyboxImagePath.c_str());
-        skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = LoadTextureCubemap(
-            skyboxImg, CUBEMAP_LAYOUT_AUTO_DETECT);
-        UnloadImage(skyboxImg);
-    }
-
-    void Renderer::renderSkybox() const
-    {
-        // We are inside the cube, we need to disable backface culling!
-        rlDisableBackfaceCulling();
-        rlDisableDepthMask();
-        DrawModel(skybox, (Vector3){0, 0, 0}, 1.0f, WHITE);
-        rlEnableBackfaceCulling();
-        rlEnableDepthMask();
+        //DrawMesh(model.meshes[0], model.materials[0], matrix);
+        DrawModelEx(model, position, rotationAxis, rotationAngle, {scale, scale, scale}, WHITE);
     }
 
     void Renderer::setupLightShaderInformation()
@@ -272,6 +326,7 @@ namespace SS3D::Renderer
                     shader, TextFormat("lights[%i].color", h));
                 lightsShaderInformation[shaderName][h].powerLoc = GetShaderLocation(
                     shader, TextFormat("lights[%i].power", h));
+
             }
         }
     }

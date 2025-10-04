@@ -63,6 +63,11 @@ namespace SS3D
                 renderer->renderModel(graphic.model, position, rotation,
                                       scale, graphic.renderParameters);
             }
+            else if (graphic.type == GraphicsType::ATMOSPHERE)
+            {
+                renderer->renderAtmosphere(graphic.model.meshes[0], graphic.material, position, rotation,
+                                           scale, graphic.renderParameters);
+            }
         }
         EndMode3D();
     }
