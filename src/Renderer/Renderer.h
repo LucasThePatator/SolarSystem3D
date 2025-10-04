@@ -15,7 +15,7 @@
 #include <spdlog/spdlog.h>
 
 #include "PostProcessing.h"
-
+#include <variant>
 
 namespace SS3D::Renderer
 {
@@ -34,6 +34,8 @@ namespace SS3D::Renderer
         int powerLoc{-1};
     };
 
+    using ShaderLocations = std::unordered_map<std::string, int>;
+
     class Renderer
     {
     public:
@@ -46,11 +48,13 @@ namespace SS3D::Renderer
         void endRender();
         void renderMesh(const Mesh& mesh, const Material& material, const Vector3& position,
                         const Quaternion& rotation,
-                        float scale) const;
+                        float scale,
+                        const std::unordered_map<std::string, std::variant<int, float, Vector3>>& renderParameters =
+                            {});
 
         const Shader& getShader(const std::string& shader_name) const { return shaders.at(shader_name); }
         void setupSkybox(const std::filesystem::path& skyboxImagePath);
-        void renderSkybox();
+        void renderSkybox() const;
 
         template <typename T>
         void addPostProcessing(const std::string& name)
@@ -58,12 +62,17 @@ namespace SS3D::Renderer
             postProcessings.push_back(std::make_shared<T>(width, height, &renderTarget));
         }
 
+        void renderModel(const Model& model, const Vector3& position, const Quaternion& attitude, float scale,
+                         const std::unordered_map<std::string, std::variant<int, float, Vector3>>& renderParameters = {});
+
+
         ::Camera camera{};
 
     private:
         std::set<Model> models;
         std::unordered_map<std::string, std::array<LightShaderInformation, MAX_LIGHTS>> lightsShaderInformation;
         std::unordered_map<std::string, Shader> shaders;
+        std::unordered_map<unsigned int, ShaderLocations> shaderLocations;
 
         RenderTexture2D renderTarget;
 
@@ -78,6 +87,11 @@ namespace SS3D::Renderer
 
         void setupLightShaderInformation();
         static Matrix makeTransformationMatrix(const Vector3& position, const Quaternion& rotation, float scale);
+
+        int getUniformLocation(const Shader& shader, const std::string& name);
+        void setShaderUniformValue(const Shader& shader, const std::string& name, int value);
+        void setShaderUniformValue(const Shader& shader, const std::string& name, float value);
+        void setShaderUniformValue(const Shader& shader, const std::string& name, Vector3 value);
     };
 }
 

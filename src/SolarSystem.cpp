@@ -54,6 +54,7 @@ namespace SS3D
         componentsRegister->addComponent<Camera>(cameraEntity, SS3D::Camera{});
 
         setSystem(config.bodySpawnConfigs);
+        setModels(config.modelSpawnConfigs);
 
         renderer->addPostProcessing<Bloom>("bloom");
         spdlog::info("Solar System Initialized");
@@ -65,6 +66,51 @@ namespace SS3D
         for (const auto& bodySpawnConfig : config)
         {
             createBody(bodySpawnConfig);
+        }
+    }
+
+    void SolarSystem::setModels(const std::vector<ModelSpawnConfig>& config)
+    {
+        for (const auto& model_spawn_config : config)
+        {
+            createModel(model_spawn_config);
+        }
+    }
+
+    void SolarSystem::getGlobalTransformMotion(const SpawnConfig& config, std::optional<ComponentInstance>& refBody,
+                                               Vector3& currentPosition, Quaternion& currentAttitude,
+                                               Vector3& currentVelocity,
+                                               Quaternion& currentRotationSpeed) const
+    {
+        const auto refBodyEntity = *entityManager->getEntityByName(config.refBodyName);
+        refBody = componentsRegister->getComponentInstance<Orbiting>(refBodyEntity);
+        currentPosition = config.position * modelScale;
+        currentAttitude = config.attitude;
+        currentRotationSpeed = QuaternionFromAxisAngle(Vector3Normalize(config.rotationSpeed),
+                                                            Vector3Length(config.rotationSpeed));
+        currentVelocity = config.speed * modelScale;
+        auto currentRefBody = refBody;
+
+        while (currentRefBody.has_value())
+        {
+            const auto orbitingInstance = currentRefBody;
+            const auto refEntity = componentsRegister->getComponentCollection<Orbiting>()->getEntity(
+                *orbitingInstance);
+            const auto& refTransform = componentsRegister->getComponent<Transform>(refEntity);
+            const auto& refVelocity = componentsRegister->getComponent<Motion>(refEntity);
+
+            const auto angle = Vector3Length(refVelocity.rotationSpeed);
+            const auto axis = Vector3Normalize(refVelocity.rotationSpeed);
+            const auto addedRotation = QuaternionFromAxisAngle(axis, angle);
+
+            currentPosition = refTransform.position + Vector3RotateByQuaternion(currentPosition, addedRotation);
+            currentAttitude = QuaternionMultiply(refTransform.rotation, currentAttitude);
+
+            currentRotationSpeed = QuaternionMultiply(addedRotation, currentRotationSpeed);
+            currentVelocity = refVelocity.velocity + Vector3RotateByQuaternion(currentVelocity, addedRotation) +
+                Vector3CrossProduct(refVelocity.rotationSpeed, refTransform.position);
+
+            currentRefBody = componentsRegister->getComponent<Orbiting>(refEntity).refBody;
         }
     }
 
@@ -89,46 +135,20 @@ namespace SS3D
         }
         else
         {
-            const auto refBodyEntity = *entityManager->getEntityByName(config.refBodyName);
-            refBody = componentsRegister->getComponentInstance<Orbiting>(refBodyEntity);
-            Vector3 currentPosition = config.position * modelScale;
-            Quaternion currentAttitude = config.attitude;
-            auto currentRotationSpeed = QuaternionFromAxisAngle(Vector3Normalize(config.rotationSpeed),
-                                                                Vector3Length(config.rotationSpeed));
-            Vector3 currentVelocity = config.speed * modelScale;
-            auto currentRefBody = refBody;
-
-            while (currentRefBody.has_value())
-            {
-                const auto orbitingInstance = currentRefBody;
-                const auto refEntity = componentsRegister->getComponentCollection<Orbiting>()->getEntity(
-                    *orbitingInstance);
-                const auto& refTransform = componentsRegister->getComponent<Transform>(refEntity);
-                const auto& refVelocity = componentsRegister->getComponent<Motion>(refEntity);
-
-                const auto angle = Vector3Length(refVelocity.rotationSpeed);
-                const auto axis = Vector3Normalize(refVelocity.rotationSpeed);
-                const auto addedRotation = QuaternionFromAxisAngle(axis, angle);
-
-                currentPosition = refTransform.position + Vector3RotateByQuaternion(currentPosition, addedRotation);
-                currentAttitude = QuaternionMultiply(refTransform.rotation, currentAttitude);
-
-                currentRotationSpeed = QuaternionMultiply(addedRotation, currentRotationSpeed);
-                currentVelocity = refVelocity.velocity + Vector3RotateByQuaternion(currentVelocity, addedRotation) +
-                    Vector3CrossProduct(refVelocity.rotationSpeed, refTransform.position);
-
-                currentRefBody = componentsRegister->getComponent<Orbiting>(refEntity).refBody;
-            }
+            Vector3 currentPosition;
+            Quaternion currentAttitude;
+            Vector3 currentVelocity;
+            Quaternion currentRotationSpeed;
+            getGlobalTransformMotion(config, refBody, currentPosition, currentAttitude, currentVelocity , currentRotationSpeed);
             componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
                                                             .position = currentPosition,
-                                                            .rotation = config.attitude,
+                                                            .rotation = currentAttitude,
                                                             .scale = config.radius * config.scale * modelScale,
                                                         });
 
             Vector3 finalAxis{};
             float finalAngle{};
-            QuaternionToAxisAngle(currentAttitude, &finalAxis, &finalAngle);
-
+            QuaternionToAxisAngle(currentRotationSpeed, &finalAxis, &finalAngle);
             const Vector3 finalRotationSpeed = finalAxis * finalAngle;
             componentsRegister->addComponent<Motion>(bodyEntity, SS3D::Motion{
                                                          .velocity = currentVelocity,
@@ -144,9 +164,10 @@ namespace SS3D
 
 
         componentsRegister->addComponent<Graphics>(bodyEntity, SS3D::Graphics{
-                                                       .type = GraphicsType::MODEL,
+                                                       .type = GraphicsType::SPHERE,
                                                        .material = material,
                                                        .model = model,
+                                                       .renderParameters = config.renderParameters,
                                                    });
 
         componentsRegister->addComponent<Orbiting>(bodyEntity, SS3D::Orbiting{
@@ -156,12 +177,83 @@ namespace SS3D
 
         if (config.isLight)
         {
-            componentsRegister->addComponent<Light>(bodyEntity, SS3D::Light{1});
+            componentsRegister->addComponent<Light>(
+                bodyEntity, SS3D::Light{.handle = 1, .power = static_cast<float>(config.lightIntensity)});
+        }
+
+        spdlog::info("Created {}", config.name);
+        return bodyEntity;
+    }
+
+    Entity SolarSystem::createModel(const ModelSpawnConfig& config)
+    {
+        const auto bodyEntity = entityManager->createEntity(config.name, "model");
+        bodies[config.name] = bodyEntity;
+
+        std::optional<ComponentInstance> refBody{std::nullopt};
+        if (config.refBodyName.empty())
+        {
+            componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
+                                                            .position = Vector3Scale(config.position, modelScale),
+                                                            .rotation = config.attitude,
+                                                            .scale = config.scale * modelScale,
+                                                        });
+
+            componentsRegister->addComponent<Motion>(bodyEntity, SS3D::Motion{
+                                                         .velocity = config.speed * modelScale,
+                                                         .rotationSpeed = config.rotationSpeed,
+                                                     });
+        }
+        else
+        {
+            Vector3 currentPosition;
+            Quaternion currentAttitude;
+            Vector3 currentVelocity;
+            Quaternion currentRotationSpeed;
+            getGlobalTransformMotion(config, refBody, currentPosition, currentAttitude, currentVelocity , currentRotationSpeed);
+            componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
+                                                            .position = currentPosition,
+                                                            .rotation = currentAttitude,
+                                                            .scale = config.scale * modelScale,
+                                                        });
+
+            Vector3 finalAxis{};
+            float finalAngle{};
+            QuaternionToAxisAngle(currentRotationSpeed, &finalAxis, &finalAngle);
+            const Vector3 finalRotationSpeed = finalAxis * finalAngle;
+            componentsRegister->addComponent<Motion>(bodyEntity, SS3D::Motion{
+                                                         .velocity = currentVelocity,
+                                                         .rotationSpeed = finalRotationSpeed,
+                                                     });
         }
 
 
+        Material material;
+        const auto model = LoadModel((resourcePath / config.modelPath).c_str());
+        GenMeshTangents(&model.meshes[0]);
+
+
+        componentsRegister->addComponent<Graphics>(bodyEntity, SS3D::Graphics{
+                                                       .type = GraphicsType::MODEL,
+                                                       .model = model,
+                                                       .renderParameters = config.renderParameters,
+                                                   });
+
+        componentsRegister->addComponent<Orbiting>(bodyEntity, SS3D::Orbiting{
+                                                       .mass = config.mass,
+                                                       .refBody = refBody,
+                                                   });
+
+        if (config.isLight)
+        {
+            componentsRegister->addComponent<Light>(
+                bodyEntity, SS3D::Light{.handle = 1, .power = static_cast<float>(config.lightIntensity)});
+        }
+
+        spdlog::info("Created {}", config.name);
         return bodyEntity;
     }
+
 
     void SolarSystem::update(const float deltaTime)
     {

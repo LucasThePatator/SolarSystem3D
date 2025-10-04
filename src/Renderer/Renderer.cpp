@@ -47,6 +47,7 @@ namespace SS3D::Renderer
 
                 shaders[fragmentShaderPath.stem().string()] = shader;
 
+
                 shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
 
                 shader.locs[SHADER_LOC_MAP_DIFFUSE] = GetShaderLocation(shader, "diffuseMap");
@@ -66,64 +67,6 @@ namespace SS3D::Renderer
 
         renderTarget = LoadRenderTextureWithFormat(width, height, PIXELFORMAT_UNCOMPRESSED_R32G32B32A32);
     }
-
-    void Renderer::setupSkybox(const std::filesystem::path& skyboxImagePath)
-    {
-        skyboxCube = GenMeshCube(1.0f, 1.0f, 1.0f);
-        skybox = LoadModelFromMesh(skyboxCube);
-
-        skybox.materials[0].shader = shaders.at("skybox");
-
-        const Image skyboxImg = LoadImage(skyboxImagePath.c_str());
-        skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = LoadTextureCubemap(
-            skyboxImg, CUBEMAP_LAYOUT_AUTO_DETECT);
-        UnloadImage(skyboxImg);
-    }
-
-    void Renderer::renderSkybox()
-    {
-        // We are inside the cube, we need to disable backface culling!
-        rlDisableBackfaceCulling();
-        rlDisableDepthMask();
-        DrawModel(skybox, (Vector3){0, 0, 0}, 1.0f, WHITE);
-        rlEnableBackfaceCulling();
-        rlEnableDepthMask();
-    }
-
-    void Renderer::setupLightShaderInformation()
-    {
-        for (const auto& [shaderName, shader] : shaders)
-        {
-            for (LightHandle h = 0; h < MAX_LIGHTS; ++h)
-            {
-                lightsShaderInformation[shaderName][h].enabledLoc = GetShaderLocation(
-                    shader, TextFormat("lights[%i].enabled", h));
-                lightsShaderInformation[shaderName][h].typeLoc = GetShaderLocation(
-                    shader, TextFormat("lights[%i].type", h));
-                lightsShaderInformation[shaderName][h].positionLoc = GetShaderLocation(
-                    shader, TextFormat("lights[%i].position", h));
-                lightsShaderInformation[shaderName][h].targetLoc = GetShaderLocation(
-                    shader, TextFormat("lights[%i].target", h));
-                lightsShaderInformation[shaderName][h].colorLoc = GetShaderLocation(
-                    shader, TextFormat("lights[%i].color", h));
-                lightsShaderInformation[shaderName][h].powerLoc = GetShaderLocation(
-                    shader, TextFormat("lights[%i].power", h));
-            }
-        }
-    }
-
-    Matrix Renderer::makeTransformationMatrix(const Vector3& position, const Quaternion& rotation,
-                                              const float scale)
-    {
-        const Matrix T = MatrixTranslate(position.x, position.y, position.z);
-        const Matrix R = QuaternionToMatrix(rotation);
-        const Matrix S = MatrixScale(scale, scale, scale);
-
-        const Matrix RT = MatrixMultiply(R, T);
-        const Matrix SRT = MatrixMultiply(S, RT);
-        return SRT;
-    }
-
 
     void Renderer::updateLight(const LightHandle id, const Vector3& position, const Vector3& target,
                                const Color& color, float power, const bool enabled)
@@ -202,8 +145,11 @@ namespace SS3D::Renderer
         inRender = false;
     }
 
+
     void Renderer::renderMesh(const Mesh& mesh, const Material& material, const Vector3& position,
-                              const Quaternion& rotation, const float scale) const
+                              const Quaternion& rotation, const float scale,
+                              const std::unordered_map<std::string, std::variant<int, float, Vector3>>&
+                              renderParameters)
     {
         if (!inRender)
         {
@@ -218,15 +164,152 @@ namespace SS3D::Renderer
         SetShaderValue(material.shader, material.shader.locs[SHADER_LOC_VECTOR_VIEW], (void*)&camera.position,
                        SHADER_UNIFORM_VEC3);
 
-        SetShaderValue(material.shader, GetShaderLocation(material.shader, "time"),
-                       (void*)&currentRenderTime, SHADER_ATTRIB_FLOAT);
-
-        float roughness = 0.05;
-        SetShaderValue(material.shader, GetShaderLocation(material.shader, "roughness"),
-                       (void*)&roughness, SHADER_ATTRIB_FLOAT);
+        for (auto& [name, value] : renderParameters)
+        {
+            switch (value.index())
+            {
+            case 0:
+                setShaderUniformValue(material.shader, name, std::get<0>(value));
+                break;
+            case 1:
+                setShaderUniformValue(material.shader, name, std::get<1>(value));
+                break;
+            case 2:
+                setShaderUniformValue(material.shader, name, std::get<2>(value));
+                break;
+            default: ;
+            }
+        }
 
         const auto matrix = makeTransformationMatrix(position, rotation, scale);
         DrawMesh(mesh, material, matrix);
+    }
+
+    void Renderer::renderModel(const Model& model, const Vector3& position, const Quaternion& attitude, const float scale,
+                               const std::unordered_map<std::string, std::variant<int, float, Vector3>>&
+                                   renderParameters)
+    {
+        if (!inRender)
+        {
+            throw std::runtime_error("Renderer::renderMesh: Not in render mode");
+        }
+
+        for (size_t i = 0; i < model.materialCount; i++)
+        {
+            SetShaderValue(model.materials[i].shader, model.materials[i].shader.locs[SHADER_LOC_VECTOR_VIEW],
+                           (void*)&camera.position,
+                           SHADER_UNIFORM_VEC3);
+        }
+
+        for (auto& [name, value] : renderParameters)
+        {
+            for (size_t i = 0; i < model.materialCount; i++)
+            {
+                switch (value.index())
+                {
+                case 0:
+
+                    setShaderUniformValue(model.materials[i].shader, name, std::get<0>(value));
+                    break;
+                case 1:
+                    setShaderUniformValue(model.materials[i].shader, name, std::get<1>(value));
+                    break;
+                case 2:
+                    setShaderUniformValue(model.materials[i].shader, name, std::get<2>(value));
+                    break;
+                default: ;
+                }
+            }
+        }
+
+        const auto matrix = makeTransformationMatrix(position, attitude, scale);
+        float rotationAngle;
+        Vector3 rotationAxis;
+        QuaternionToAxisAngle(attitude, &rotationAxis, &rotationAngle);
+        DrawModelEx(model, position, rotationAxis, rotationAngle, {scale, scale, scale}, {1, 1, 1});
+    }
+
+
+    void Renderer::setupSkybox(const std::filesystem::path& skyboxImagePath)
+    {
+        skyboxCube = GenMeshCube(1.0f, 1.0f, 1.0f);
+        skybox = LoadModelFromMesh(skyboxCube);
+
+        skybox.materials[0].shader = shaders.at("skybox");
+
+        const Image skyboxImg = LoadImage(skyboxImagePath.c_str());
+        skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = LoadTextureCubemap(
+            skyboxImg, CUBEMAP_LAYOUT_AUTO_DETECT);
+        UnloadImage(skyboxImg);
+    }
+
+    void Renderer::renderSkybox() const
+    {
+        // We are inside the cube, we need to disable backface culling!
+        rlDisableBackfaceCulling();
+        rlDisableDepthMask();
+        DrawModel(skybox, (Vector3){0, 0, 0}, 1.0f, WHITE);
+        rlEnableBackfaceCulling();
+        rlEnableDepthMask();
+    }
+
+    void Renderer::setupLightShaderInformation()
+    {
+        for (const auto& [shaderName, shader] : shaders)
+        {
+            for (LightHandle h = 0; h < MAX_LIGHTS; ++h)
+            {
+                lightsShaderInformation[shaderName][h].enabledLoc = GetShaderLocation(
+                    shader, TextFormat("lights[%i].enabled", h));
+                lightsShaderInformation[shaderName][h].typeLoc = GetShaderLocation(
+                    shader, TextFormat("lights[%i].type", h));
+                lightsShaderInformation[shaderName][h].positionLoc = GetShaderLocation(
+                    shader, TextFormat("lights[%i].position", h));
+                lightsShaderInformation[shaderName][h].targetLoc = GetShaderLocation(
+                    shader, TextFormat("lights[%i].target", h));
+                lightsShaderInformation[shaderName][h].colorLoc = GetShaderLocation(
+                    shader, TextFormat("lights[%i].color", h));
+                lightsShaderInformation[shaderName][h].powerLoc = GetShaderLocation(
+                    shader, TextFormat("lights[%i].power", h));
+            }
+        }
+    }
+
+    Matrix Renderer::makeTransformationMatrix(const Vector3& position, const Quaternion& rotation,
+                                              const float scale)
+    {
+        const Matrix T = MatrixTranslate(position.x, position.y, position.z);
+        const Matrix R = QuaternionToMatrix(rotation);
+        const Matrix S = MatrixScale(scale, scale, scale);
+
+        const Matrix RT = MatrixMultiply(R, T);
+        const Matrix SRT = MatrixMultiply(S, RT);
+        return SRT;
+    }
+
+    int Renderer::getUniformLocation(const ::Shader& shader, const std::string& name)
+    {
+        auto& locations = shaderLocations[shader.id];
+        if (!locations.contains(name))
+        {
+            locations[name] = GetShaderLocation(shader, name.c_str());
+        }
+        return locations[name];
+    }
+
+    void Renderer::setShaderUniformValue(const Shader& shader, const std::string& name, int value)
+    {
+        SetShaderValue(shader, getUniformLocation(shader, name), static_cast<void*>(&value), SHADER_UNIFORM_INT);
+    }
+
+    void Renderer::setShaderUniformValue(const Shader& shader, const std::string& name, float value)
+    {
+        SetShaderValue(shader, getUniformLocation(shader, name), static_cast<void*>(&value), SHADER_UNIFORM_FLOAT);
+    }
+
+    void Renderer::setShaderUniformValue(const Shader& shader, const std::string& name, Vector3 value)
+    {
+        SetShaderValue(shader, getUniformLocation(shader, name), static_cast<void*>(&value), SHADER_UNIFORM_VEC3);
     }
 }
 

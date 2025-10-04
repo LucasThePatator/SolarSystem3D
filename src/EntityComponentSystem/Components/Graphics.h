@@ -7,6 +7,8 @@
 
 #include <memory>
 #include <raylib.h>
+#include <unordered_map>
+#include <variant>
 
 namespace SS3D
 {
@@ -22,6 +24,7 @@ namespace SS3D
         Material material;
         Model model;
         Mesh mesh;
+        std::unordered_map<std::string, std::variant<int, float, Vector3>> renderParameters;
     };
 }
 

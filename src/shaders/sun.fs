@@ -1,5 +1,7 @@
 #version 330
 
+#define pi 3.141592
+
 // Input vertex attributes (from vertex shader)
 in vec3 fragPosition;
 in vec2 fragTexCoord;
@@ -14,8 +16,8 @@ uniform float time;
 // Output fragment color
 out vec4 finalColor;
 
-float pi = 3.141592;
 float period = 12;
+
 void main()
 {
     // Texel color fetching from texture sampler

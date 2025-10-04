@@ -25,8 +25,8 @@ namespace SS3D
         SolarSystem() = delete;
         explicit SolarSystem(EntityComponentSystem& ecs, const std::filesystem::path& configurationFile);
 
-        Entity createBody(const BodySpawnConfig& config
-        );
+        Entity createBody(const BodySpawnConfig& config);
+        Entity createModel(const ModelSpawnConfig& config);
 
         void update(float deltaTime);
         void render();
@@ -42,6 +42,10 @@ namespace SS3D
 
         std::filesystem::path resourcePath;
         void setSystem(const std::vector<BodySpawnConfig>& config);
+        void setModels(const std::vector<ModelSpawnConfig>& config);
+        void getGlobalTransformMotion(const SpawnConfig& config, std::optional<ComponentInstance>& refBody,
+                                      Vector3& currentPosition, Quaternion& currentAttitude, Vector3& currentVelocity,
+                                      Quaternion& currentRotationSpeed) const;
         void makeMaterial(const std::string& bodyName, Material& material, const std::string& shaderName) const;
     };
 } // SS3D

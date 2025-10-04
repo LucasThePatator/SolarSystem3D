@@ -6,15 +6,16 @@
 #define INC_3DSOLARSYSTEM_CONFIG_H
 #include <filesystem>
 #include <raylib.h>
+#include <unordered_map>
+#include <variant>
 #include <vector>
 
 namespace SS3D
 {
-    struct BodySpawnConfig
+    struct SpawnConfig
     {
         std::string name;
         float mass;
-        float radius;
         float scale;
         Vector3 position;
         Vector3 speed;
@@ -25,6 +26,18 @@ namespace SS3D
 
         bool isLight{false};
         double lightIntensity{0};
+
+        std::unordered_map<std::string, std::variant<int, float, Vector3>> renderParameters;
+    };
+
+    struct BodySpawnConfig : SpawnConfig
+    {
+        float radius;
+    };
+
+    struct ModelSpawnConfig : SpawnConfig
+    {
+        std::filesystem::path modelPath;
     };
 
     struct Config
@@ -35,6 +48,7 @@ namespace SS3D
         int width, height;
         std::filesystem::path resourcePath, shaderPath;
         std::vector<BodySpawnConfig> bodySpawnConfigs;
+        std::vector<ModelSpawnConfig> modelSpawnConfigs;
         std::filesystem::path skyboxTexturePath;
     };
 } // SS3D
