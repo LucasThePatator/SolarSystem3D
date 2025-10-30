@@ -48,7 +48,7 @@ namespace SS3D::Renderer
                 // Vérifier si le shader est valide
                 if (shader.id == 0)
                 {
-                   throw std::runtime_error("Failed to load shader: " + fragmentShaderPath.stem().string());
+                    throw std::runtime_error("Failed to load shader: " + fragmentShaderPath.stem().string());
                 }
 
                 spdlog::info("Loaded shader: {} (ID: {})", fragmentShaderPath.stem().string(), shader.id);

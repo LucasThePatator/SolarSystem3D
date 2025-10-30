@@ -58,7 +58,8 @@ namespace SS3D::Renderer
         void renderAtmosphere(const Mesh& mesh, const Material& material, const Vector3& position,
                               const Quaternion& attitude,
                               float scale,
-                              const std::unordered_map<std::string, std::variant<int, float, Vector3>>& renderParameters);
+                              const std::unordered_map<std::string, std::variant<int, float, Vector3>>&
+                              renderParameters);
 
         template <typename T>
         void addPostProcessing(const std::string& name)

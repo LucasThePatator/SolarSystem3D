@@ -125,9 +125,11 @@ namespace SS3D
         if (config.refBodyName.empty())
         {
             transformInstance = componentsRegister->addComponent<Transform>(bodyEntity, SS3D::Transform{
-                                                                                .position = Vector3Scale(config.position, modelScale),
+                                                                                .position = Vector3Scale(
+                                                                                    config.position, modelScale),
                                                                                 .rotation = config.attitude,
-                                                                                .scale = config.radius * config.scale * modelScale,
+                                                                                .scale = config.radius * config.scale *
+                                                                                modelScale,
                                                                             });
 
             componentsRegister->addComponent<Motion>(bodyEntity, SS3D::Motion{
@@ -192,7 +194,7 @@ namespace SS3D
             material.shader = ecs.systemRegister->getSystem<RenderingSystem>()->renderer->getShader("atmo_scattering");
 
             componentsRegister->addComponent<Graphics>(atmoEntity, {
-                                                           .type=GraphicsType::ATMOSPHERE,
+                                                           .type = GraphicsType::ATMOSPHERE,
                                                            .material = material,
                                                            .model = model,
                                                        });
